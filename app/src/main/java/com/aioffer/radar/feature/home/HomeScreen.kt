@@ -386,7 +386,9 @@ private fun ProductCard(
     onProductClick: (String) -> Unit
 ) {
     val product = homeProduct.product
-    val offer = homeProduct.activeOffers.minByOrNull { it.price.actualAmount.amountMinor }
+    val offer = homeProduct.activeOffers.minByOrNull { offer ->
+        offer.price.monthlyEquivalent?.amountMinor ?: offer.price.actualAmount.amountMinor
+    }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -458,6 +460,19 @@ private fun ProductCard(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
+                if (offer.comparisonKey.billingPeriod ==
+                    com.aioffer.radar.core.model.BillingPeriod.QUARTERLY ||
+                    offer.comparisonKey.billingPeriod ==
+                    com.aioffer.radar.core.model.BillingPeriod.YEARLY
+                ) {
+                    offer.price.monthlyEquivalent?.let { monthly ->
+                        Text(
+                            text = stringResource(R.string.monthly_equivalent, formatMoney(monthly)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             Row(
                 modifier = Modifier.align(Alignment.End),
@@ -521,7 +536,17 @@ private fun EmptyContent(
         title = stringResource(
             if (isOfficial) R.string.official_empty_offers else R.string.empty_offers
         ),
-        description = if (isOfficial) stringResource(R.string.official_empty_offers_desc) else null,
+        description = if (isOfficial) {
+            stringResource(
+                if (uiState.officialAdapterConfigured) {
+                    R.string.official_empty_offers_configured_desc
+                } else {
+                    R.string.official_empty_offers_desc
+                }
+            )
+        } else {
+            null
+        },
         action = stringResource(R.string.retry_sync),
         onAction = onRefresh,
         secondaryAction = if (isOfficial) stringResource(R.string.switch_to_demo_data) else null,
@@ -637,6 +662,8 @@ private fun formatOfferPrice(offer: Offer): String {
     return when (offer.comparisonKey.billingPeriod) {
         com.aioffer.radar.core.model.BillingPeriod.MONTHLY ->
             stringResource(R.string.price_monthly, price)
+        com.aioffer.radar.core.model.BillingPeriod.QUARTERLY ->
+            stringResource(R.string.price_quarterly, price)
         com.aioffer.radar.core.model.BillingPeriod.YEARLY ->
             stringResource(R.string.price_yearly, price)
         com.aioffer.radar.core.model.BillingPeriod.ONE_TIME -> price

@@ -35,8 +35,10 @@ data class PriceChartModel(
         ): PriceChartModel? {
             val orderedSnapshots = snapshots.sortedBy { it.observedAt }
             val first = orderedSnapshots.firstOrNull() ?: return null
+            val usesMonthlyEquivalent = billingPeriod == BillingPeriod.QUARTERLY ||
+                billingPeriod == BillingPeriod.YEARLY
             val points = orderedSnapshots.map { snapshot ->
-                val value = if (billingPeriod == BillingPeriod.YEARLY) {
+                val value = if (usesMonthlyEquivalent) {
                     PriceDisplayModelFactory.create(snapshot.price, billingPeriod).monthlyEquivalent
                         ?: snapshot.price.actualAmount
                 } else {
@@ -46,7 +48,7 @@ data class PriceChartModel(
             }
             return PriceChartModel(
                 points = points,
-                semantics = if (billingPeriod == BillingPeriod.YEARLY) {
+                semantics = if (usesMonthlyEquivalent) {
                     ChartValueSemantics.MONTHLY_EQUIVALENT
                 } else {
                     ChartValueSemantics.ACTUAL_PRICE

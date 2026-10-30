@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.domain.PriceComparisonTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-30T16:14:27" hostname="192.168.31.129" time="0.003">
+  <properties/>
+  <testcase name="identicalKeys_canBeCompared" classname="com.aioffer.radar.domain.PriceComparisonTest" time="0.0"/>
+  <testcase name="differentBillingPeriod_cannotBeCompared" classname="com.aioffer.radar.domain.PriceComparisonTest" time="0.0"/>
+  <testcase name="differentCurrency_cannotBeCompared" classname="com.aioffer.radar.domain.PriceComparisonTest" time="0.002"/>
+  <testcase name="differentPlan_cannotBeCompared" classname="com.aioffer.radar.domain.PriceComparisonTest" time="0.0"/>
+  <testcase name="differentProduct_cannotBeCompared" classname="com.aioffer.radar.domain.PriceComparisonTest" time="0.0"/>
+  <testcase name="differentTaxBasis_cannotBeCompared" classname="com.aioffer.radar.domain.PriceComparisonTest" time="0.0"/>
+  <testcase name="differentRegion_cannotBeCompared" classname="com.aioffer.radar.domain.PriceComparisonTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

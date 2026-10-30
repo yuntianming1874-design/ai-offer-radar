@@ -1,0 +1,6 @@
+# Device
+OPD2515
+17
+37
+OPD2515_17.0.0.103(CN01)
+serial=<device-serial>

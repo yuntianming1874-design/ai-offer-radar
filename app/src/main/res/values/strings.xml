@@ -27,6 +27,7 @@
     <string name="switch_to_demo_data">切回演示数据</string>
     <string name="official_empty_offers">暂无官方数据</string>
     <string name="official_empty_offers_desc">官方数据源适配器尚未配置，当前不会显示任何官方实时优惠。切换只改变展示范围，演示记录仍保留演示标识。</string>
+    <string name="official_empty_offers_configured_desc">官方数据源已配置，但当前还没有同步到官方优惠。请确认本机采集器已启动并联网，然后重新同步。</string>
     <string name="notification_prompt_later">稍后</string>
     <string name="subscription_failed">订阅操作失败，请重试</string>
     <string name="historical_lowest">历史最低</string>
@@ -35,6 +36,7 @@
     <string name="product_updated_at">更新时间：%1$s</string>
     <string name="no_active_offer">暂无有效优惠</string>
     <string name="price_monthly">%1$s/月</string>
+    <string name="price_quarterly">%1$s/季</string>
     <string name="price_yearly">%1$s/年</string>
     <string name="source_demo">演示数据</string>
     <string name="source_official_api">官方 API</string>
@@ -57,6 +59,7 @@
     <string name="plan_filter">套餐</string>
     <string name="billing_period_filter">计费周期</string>
     <string name="billing_monthly">月付</string>
+    <string name="billing_quarterly">季付</string>
     <string name="billing_yearly">年付</string>
     <string name="billing_one_time">一次性</string>
     <string name="original_price">原价：%1$s</string>
@@ -106,8 +109,10 @@
     <string name="settings_data_source_demo_desc">内置确定性演示数据，非实时优惠</string>
     <string name="settings_data_source_official">官方数据</string>
     <string name="settings_data_source_official_desc">官方适配器尚未配置，切换后不会显示实时数据</string>
+    <string name="settings_data_source_official_configured_desc">来自 GLM Coding Plan 官方套餐页，经本机渲染采集器抓取</string>
     <string name="settings_data_source_switch_note">切换只改变展示范围，不会改写已保存记录的可信度标识。演示记录永远不会被标记为官方历史。</string>
     <string name="settings_official_not_configured">官方数据源适配器尚未配置：当前不会产生或缓存官方实时数据。可随时切回演示数据查看演示内容。</string>
+    <string name="settings_official_collector_hint">官方源需要先在电脑启动 GLM 采集器，并执行 adb reverse tcp:8787 tcp:8787；随后在首页点“同步”。采集失败时首页会保留缓存并显示失败原因。</string>
     <string name="settings_last_sync">同步状态</string>
     <string name="settings_last_successful_sync">最后成功同步：%1$s</string>
     <string name="settings_no_successful_sync">尚无成功同步记录</string>

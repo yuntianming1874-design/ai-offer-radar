@@ -1,0 +1,19 @@
+Phase 12 verification (2026-10-31 00:13 Asia/Shanghai)
+- Build command: clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest
+- Gradle: BUILD SUCCESSFUL in 54s, 81 actionable tasks
+- JVM: 134 tests, 0 failures, 0 errors, 0 skipped (22 suites)
+- Lint: 0 errors, 2 warnings (existing POST_NOTIFICATIONS InlinedApi, unused radar_blue)
+- Collector payload tests: 4 passed, 0 failed
+- Collector live: 3 products / 3 plans / 9 offers, source OFFICIAL_WEB
+- Instrumentation: 86 tests, 0 failures, 0 errors, 0 skipped
+  - command: connectedDebugAndroidTest
+  - device: OPD2515 / Android 17 / API 37 / serial <device-serial>
+  - result XML: phase12-connected-test-results.xml
+- Manual official-mode acceptance:
+  - official source shows GLM Coding Plan Lite/Pro/Max, 3 billing periods
+  - Lite yearly on home: CNY 991.20/year, monthly equivalent CNY 82.60
+  - Lite quarterly detail: actual CNY 283.20, original CNY 354.00, monthly equivalent CNY 94.40
+  - stop collector -> sync fails, cached official data remains, failure reason is shown, last successful sync stays 00:10
+  - switch back to demo -> demo cards only, no official products; source labels remain DEMO
+- Device-manual evidence: device-manual/official-home.png, official-detail-quarterly.png, official-collector-down.png, demo-after-official.png and matching UI XML dumps
+- Previously unexecuted device matrix: API 26–36, other ROMs, notification-channel/soak tests remain unverified

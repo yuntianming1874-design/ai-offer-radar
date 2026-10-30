@@ -110,7 +110,13 @@ fun SettingsScreen(
                 DataSourceOption(
                     selected = uiState.settings.dataSourceMode == DataSourceMode.OFFICIAL,
                     title = stringResource(R.string.settings_data_source_official),
-                    description = stringResource(R.string.settings_data_source_official_desc),
+                    description = stringResource(
+                        if (uiState.officialAdapterConfigured) {
+                            R.string.settings_data_source_official_configured_desc
+                        } else {
+                            R.string.settings_data_source_official_desc
+                        }
+                    ),
                     onClick = { onDataSourceModeSelected(DataSourceMode.OFFICIAL) }
                 )
             }
@@ -126,6 +132,17 @@ fun SettingsScreen(
             ) {
                 item(key = "official_warning") {
                     WarningSurface(stringResource(R.string.settings_official_not_configured))
+                }
+            }
+            if (uiState.settings.dataSourceMode == DataSourceMode.OFFICIAL &&
+                uiState.officialAdapterConfigured
+            ) {
+                item(key = "official_collector_hint") {
+                    Text(
+                        text = stringResource(R.string.settings_official_collector_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
             item(key = "sync_header") {

@@ -65,6 +65,36 @@ class PriceChartModelTest {
     }
 
     @Test
+    fun create_quarterlySnapshotsUsesMonthlyEquivalent() {
+        val key = BASE_COMPARISON_KEY.copy(billingPeriod = BillingPeriod.QUARTERLY)
+        val quarterly = testSnapshot(
+            id = "quarterly",
+            key = key,
+            price = testPrice(
+                actualAmountMinor = 28_320,
+                monthlyEquivalent = com.aioffer.radar.core.testing.testMoney(9_440)
+            ),
+            observedAt = Instant.parse("2026-02-01T00:00:00Z")
+        )
+        val monthly = testSnapshot(
+            id = "monthly",
+            key = key,
+            price = testPrice(
+                actualAmountMinor = 35_400,
+                monthlyEquivalent = com.aioffer.radar.core.testing.testMoney(11_800)
+            ),
+            observedAt = Instant.parse("2026-01-01T00:00:00Z")
+        )
+
+        val chart = requireNotNull(
+            PriceChartModel.create(listOf(quarterly, monthly), BillingPeriod.QUARTERLY)
+        )
+
+        assertEquals(ChartValueSemantics.MONTHLY_EQUIVALENT, chart.semantics)
+        assertEquals(listOf(11_800L, 9_440L), chart.points.map { it.value.amountMinor })
+    }
+
+    @Test
     fun create_singleTimestampDoesNotHaveEnoughData() {
         val observedAt = Instant.parse("2026-01-01T00:00:00Z")
         val snapshots = listOf(

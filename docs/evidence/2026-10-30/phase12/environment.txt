@@ -1,0 +1,32 @@
+$ adb devices -l
+List of devices attached
+
+
+$ git rev-parse HEAD
+f517156ff49f248bb1da90637498a7a4ba7a0a6b
+
+$ git status --short
+ M app/build.gradle.kts
+ M app/src/androidTest/java/com/aioffer/radar/feature/home/HomeScreenTest.kt
+ M app/src/androidTest/java/com/aioffer/radar/navigation/SettingsNavigationTest.kt
+ M app/src/main/AndroidManifest.xml
+ M app/src/main/java/com/aioffer/radar/AppContainer.kt
+ M app/src/main/java/com/aioffer/radar/core/model/BillingPeriod.kt
+ D app/src/main/java/com/aioffer/radar/core/network/UnconfiguredOfficialRemoteDataSource.kt
+ M app/src/main/java/com/aioffer/radar/feature/detail/DetailScreen.kt
+ M app/src/main/java/com/aioffer/radar/feature/detail/PriceChartModel.kt
+ M app/src/main/java/com/aioffer/radar/feature/home/HomeScreen.kt
+ M app/src/main/java/com/aioffer/radar/feature/settings/SettingsScreen.kt
+ M app/src/main/res/values/strings.xml
+ M app/src/test/java/com/aioffer/radar/feature/detail/PriceChartModelTest.kt
+ M gradle/libs.versions.toml
+?? app/src/androidTest/assets/
+?? app/src/androidTest/java/com/aioffer/radar/data/GlmCodingPlanSourceIntegrationTest.kt
+?? app/src/main/java/com/aioffer/radar/core/network/GlmCodingPlanRemoteDataSource.kt
+?? app/src/main/res/xml/
+?? app/src/test/java/com/aioffer/radar/core/network/GlmCodingPlanRemoteDataSourceTest.kt
+?? docs/evidence/2026-10-30/phase12/
+?? tools/
+
+$ curl health
+{"ok":true,"sourceUrl":"https://www.bigmodel.cn/glm-coding","lastSuccessAt":null,"lastError":null,"cachedFetchedAt":null}

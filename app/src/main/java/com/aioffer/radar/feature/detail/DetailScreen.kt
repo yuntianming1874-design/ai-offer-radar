@@ -312,7 +312,9 @@ private fun OfferCard(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
             )
-            if (offer.comparisonKey.billingPeriod == BillingPeriod.YEARLY) {
+            if (offer.comparisonKey.billingPeriod == BillingPeriod.QUARTERLY ||
+                offer.comparisonKey.billingPeriod == BillingPeriod.YEARLY
+            ) {
                 PriceDisplayModelFactory.create(offer).monthlyEquivalent?.let { monthly ->
                     Text(stringResource(R.string.monthly_equivalent, formatMoney(monthly)))
                 }
@@ -475,6 +477,7 @@ private fun discountText(offer: Offer): String = when (
 private fun billingPeriodLabel(period: BillingPeriod): String = stringResource(
     when (period) {
         BillingPeriod.MONTHLY -> R.string.billing_monthly
+        BillingPeriod.QUARTERLY -> R.string.billing_quarterly
         BillingPeriod.YEARLY -> R.string.billing_yearly
         BillingPeriod.ONE_TIME -> R.string.billing_one_time
     }

@@ -9,8 +9,7 @@ import com.aioffer.radar.core.datastore.createAppSettingsStore
 import com.aioffer.radar.core.datastore.createDemoStateStore
 import com.aioffer.radar.core.network.AndroidNetworkMonitor
 import com.aioffer.radar.core.network.DemoRemoteDataSource
-import com.aioffer.radar.core.network.OFFICIAL_SOURCE_ID
-import com.aioffer.radar.core.network.UnconfiguredOfficialRemoteDataSource
+import com.aioffer.radar.core.network.GlmCodingPlanRemoteDataSource
 import com.aioffer.radar.core.notification.AndroidNotificationSender
 import com.aioffer.radar.core.notification.NotificationDispatcher
 import com.aioffer.radar.core.notification.OfferNotificationChannels
@@ -53,11 +52,11 @@ class AppContainer(context: Context) {
     )
 
     /**
-     * The official slot is intentionally unconfigured until a real adapter
-     * supplies its own source metadata. It has a source ID separate from the
-     * demo source, so a demo payload can never be persisted as official data.
+     * The official slot reads the GLM Coding Plan snapshot from the local
+     * rendering collector. It uses its own source ID and source metadata, so
+     * demo payloads can never be persisted as official data.
      */
-    private val officialRemoteDataSource = UnconfiguredOfficialRemoteDataSource()
+    private val officialRemoteDataSource = GlmCodingPlanRemoteDataSource()
     private val repository = LocalRadarRepository(database)
     private val demoSyncService = OfferSyncService(
         remoteDataSource = demoRemoteDataSource,
@@ -105,8 +104,8 @@ class AppContainer(context: Context) {
     }
 
     val demoSourceId: String = demoRemoteDataSource.sourceId
-    val officialSourceId: String = OFFICIAL_SOURCE_ID
-    val officialAdapterConfigured: Boolean = false
+    val officialSourceId: String = officialRemoteDataSource.sourceId
+    val officialAdapterConfigured: Boolean = true
 
     fun homeViewModelFactory() = HomeViewModel.factory(
         repository = repository,

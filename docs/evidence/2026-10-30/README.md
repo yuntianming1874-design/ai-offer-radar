@@ -1,6 +1,37 @@
-# 2026-10-30 阶段 9/10/11 设备验收与 P1-1 历史证据
+# 2026-10-30 阶段 9/10/11/12 设备验收与历史证据
 
 设备：OPD2515，Android 17 / API 37，adb 序列号 <device-serial>。
+
+## 阶段 12 GLM 官方源验收（2026-10-31 00:13）
+
+| 项目 | 结果 |
+|---|---|
+| `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest` | `BUILD SUCCESSFUL`，81 tasks，54s |
+| JVM 单元测试 | **134 / 134**，0 failed / 0 errors / 0 skipped（22 suites） |
+| Lint | 0 errors，2 warnings |
+| 采集器 payload 测试 | **4 / 4** |
+| 设备仪器测试 | **86 / 86**，0 failed / 0 errors / 0 skipped，1m 5s |
+| 采集器实测 | 3 products / 3 plans / 9 offers；5 分钟缓存；health ok |
+| GLM 官方模式真机验收 | **已执行**：同步、年付/季付价格、失败缓存态、切回演示隔离 |
+
+文件：
+
+- `phase12/collector-payload.json`：真实采集输出（9 offers，季/年总价 + 月均）。
+- `phase12/collector-health.json`：采集服务健康检查。
+- `phase12/collector-serve.log`：`--serve` 启动与请求日志。
+- `phase12/collector-tests.txt`：`node --test` 输出（4/4）。
+- `phase12/official-page.png`：官方套餐页渲染截图。
+- `phase12/unit-test-results/`：22 个 JVM 测试类 XML。
+- `phase12/lint-results-debug.txt`：lint 文本报告。
+- `phase12/phase12-connected-test-results.xml`：86 项仪器测试原始 XML。
+- `phase12/phase12-connected.log`、`phase12-device.txt`：设备测试日志与设备信息。
+- `phase12/device-manual/`：官方首页、季付详情、采集器停止失败态、切回演示的截图与 UI dump。
+- `phase12/final-status.txt`、`environment.txt`：构建、采集器、设备与验收摘要。
+- 进度：`docs/PHASE12_PROGRESS.md`。
+
+未验证：API 26–36、其他 ROM、通知渠道/省电 soak；FCM、release/CI 仍未实现。
+
+阶段 12 新增并执行的测试：JVM `GlmCodingPlanRemoteDataSourceTest`（6）、`PriceChartModelTest.create_quarterlySnapshotsUsesMonthlyEquivalent`（1）；设备 `GlmCodingPlanSourceIntegrationTest`（1）、`HomeScreenTest.productCard_prefersLowestMonthlyEquivalentQuarterlyOffer`（1），其余为原有 84 项回归。
 
 ## 阶段 11 设备验收与交付（2026-10-30 22:34）
 
@@ -23,7 +54,7 @@
 - 手工验收清单：`docs/PHASE11_DEVICE_ACCEPTANCE.md`。
 - 进度：`docs/PHASE11_PROGRESS.md`。
 
-未验证：API 26–36、其他 ROM、通知渠道关闭/省电 soak；真实官方数据源；FCM；发布签名/CI。非法 URL、无浏览器、数据库读取失败等异常未手工制造，仅由自动化覆盖。
+未验证：API 26–36、其他 ROM、通知渠道关闭/省电 soak；阶段 12 之前未接入真实官方源（阶段 12 已接入 GLM，见上）；FCM；发布签名/CI。非法 URL、无浏览器、数据库读取失败等异常未手工制造，仅由自动化覆盖。
 
 ## 阶段 10 设备测试（2026-10-30 14:51）
 

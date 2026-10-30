@@ -6,8 +6,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.aioffer.radar.core.model.BillingPeriod
 import com.aioffer.radar.core.model.DataSourceMode
 import com.aioffer.radar.core.model.HomeProduct
+import com.aioffer.radar.core.model.Money
 import com.aioffer.radar.core.model.NotificationPromptState
 import com.aioffer.radar.core.model.Product
 import com.aioffer.radar.core.testing.databaseOffer
@@ -57,6 +59,20 @@ class HomeScreenTest {
 
         assertEquals("kimi", selectedProductId)
         assertEquals(true, selectedSubscription)
+    }
+
+    @Test
+    fun productCard_prefersLowestMonthlyEquivalentQuarterlyOffer() {
+        setHomeContent(
+            uiState = HomeUiState(
+                contentState = HomeContentState.CONTENT,
+                products = listOf(testQuarterlyProduct())
+            )
+        )
+
+        composeRule.onNodeWithText("¥283.20/季").assertIsDisplayed()
+        composeRule.onNodeWithText("折合月均：¥94.40").assertIsDisplayed()
+        composeRule.onNodeWithText("¥118.00/月").assertDoesNotExist()
     }
 
     @Test
@@ -318,6 +334,26 @@ class HomeScreenTest {
             activeOffers = listOf(offer),
             isSubscribed = isSubscribed,
             historicalLowestOfferIds = setOf(offer.id)
+        )
+    }
+
+    private fun testQuarterlyProduct(): HomeProduct {
+        val monthly = databaseOffer()
+        val quarterly = monthly.copy(
+            id = "offer-quarterly",
+            comparisonKey = monthly.comparisonKey.copy(
+                billingPeriod = BillingPeriod.QUARTERLY
+            ),
+            price = monthly.price.copy(
+                originalAmount = Money(35_400, monthly.comparisonKey.currency),
+                actualAmount = Money(28_320, monthly.comparisonKey.currency),
+                monthlyEquivalent = Money(9_440, monthly.comparisonKey.currency)
+            )
+        )
+        return HomeProduct(
+            product = Product(id = "kimi", name = "KIMI", isDemo = true),
+            activeOffers = listOf(monthly, quarterly),
+            isSubscribed = false
         )
     }
 }

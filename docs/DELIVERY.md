@@ -1,23 +1,35 @@
 # AI 优惠雷达：交付说明
 
-更新时间：2026-10-30 22:36  
-适用版本：本地演示版（`com.aioffer.radar`，版本号见 `app/build.gradle.kts`）  
-交付结论：可构建、可安装、可测试；**不是生产版本**，没有真实官方数据源、后端、账号、支付或 FCM。
+更新时间：2026-10-31 00:14
+适用版本：本地演示版 + GLM Coding Plan 官方源（`com.aioffer.radar`，版本号见 `app/build.gradle.kts`）
+交付结论：可构建、可安装、可测试；已接入**一条**真实 GLM 官方源（依赖开发机本机渲染采集器），但**不是生产版本**，没有后端、账号、支付或 FCM。
 
-> 重要：内置数据全部是确定性演示数据。演示模式下首页固定显示“演示数据，非实时优惠”。演示价格、折扣、历史、更新时间均不代表任何官网当前状态。
+> 重要：内置数据全部是确定性演示数据。演示模式下首页固定显示“演示数据，非实时优惠”。官方模式的数据来自 `https://www.bigmodel.cn/glm-coding` 的公开套餐页，经本机 `tools/glm-collector` 渲染采集；采集器停止或设备未执行 `adb reverse` 时同步会失败并显示原因，不会把旧价描述为实时价。
 
 ## 1. 本阶段交付状态
 
 | 项目 | 状态 |
 |---|---|
-| 干净构建 `clean assembleDebug testDebugUnitTest lintDebug` | 通过：`BUILD SUCCESSFUL`，50s，55 tasks（最终复跑） |
-| JVM 单元测试 | 127 / 127，0 failed / 0 errors / 0 skipped（21 suites） |
+| 干净构建 `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest` | 通过：`BUILD SUCCESSFUL`，81 tasks，54s（阶段 12 最终复跑） |
+| JVM 单元测试 | 134 / 134，0 failed / 0 errors / 0 skipped（22 suites） |
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
-| 设备自动化测试 | 84 / 84，0 failed / 0 errors / 0 skipped（2026-10-30 22:34，1m 6s；OPD2515 / API 37） |
+| 设备自动化测试 | **86 / 86**（2026-10-31 00:13，OPD2515 / API 37，1m 5s）；阶段 11 历史基线 84 / 84 |
 | 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
+| 阶段 12 GLM 官方源 | **已完成真机验收**：官方同步、3 产品 × 3 周期、季付总价/月均、失败缓存态、切回演示隔离；证据见 `docs/evidence/2026-10-30/phase12/device-manual/` |
 | 交付说明 | 已完成（本文件） |
 
-阶段 11 的构建、手工验收与文档已完成。部分无法在正常安装中自然制造的异常（非法 URL、无浏览器、数据库读取失败、清除记录）由仪器/单元测试覆盖，不能写成手工通过；详见 [PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md) 第 12 节。
+阶段 12 的 JVM 134/134、采集器 4/4、Lint 0 errors / 2 warnings 和 86 项设备测试均已通过；官方模式真机采集/同步与失败/隔离场景已执行。阶段 11 的构建、手工验收与文档已完成；部分无法在正常安装中自然制造的异常（非法 URL、无浏览器、数据库读取失败、清除记录）由仪器/单元测试覆盖，不能写成手工通过；详见 [PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md) 第 12 节。
+
+### 1.1 阶段 12 增量：GLM Coding Plan 官方源
+
+- 官方源：`https://www.bigmodel.cn/glm-coding`，`DataSourceType.OFFICIAL_WEB`，sourceId `glm-coding-plan-official`。
+- 采集器：`tools/glm-collector/`，Node 24 + 本机 Chrome headless CDP，读取 Lite / Pro / Max 的连续包月、包季、包年价格；输出 3 products、3 plans、9 offers。
+- 价格语义：季/年 offer 的 `actualAmountMinor` 是这一期总价，`monthlyEquivalentMinor` 是页面折合月价；首页选月均最低的 offer 显示，详情同时显示总价和月均。
+- Android：`GlmCodingPlanRemoteDataSource` 通过 `http://127.0.0.1:8787/v1/glm-coding-plan` 拉取；`network_security_config` 只允许本机/模拟器回环地址明文。
+- 失败语义：采集器不可达、HTTP 非 2xx、schema 不匹配时同步失败，状态卡显示原因；官方缓存不会回退旧价冒充实时。演示数据完全隔离。
+- 验证结果：JVM 134/134；采集器 payload 测试 4/4；Lint 0 errors / 2 warnings；设备 **86 / 86**。
+- 官方模式真机：首页 GLM Lite/Pro/Max 选年付最低月均（Lite ¥991.20/年、月均 ¥82.60）；Lite 季付详情总价 ¥283.20、原价 ¥354.00、月均 ¥94.40；采集器停止后缓存保留并显示失败原因；切回演示后官方产品完全隐藏。
+- 未验证：API 26–36、其他 ROM、通知渠道关闭/省电 soak。
 
 ## 2. 构建、运行和测试
 
@@ -196,12 +208,12 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 
 ### 6.2 空数据
 
-设置 → 数据源 → 官方数据。预期：
+设置 → 数据源 → 官方数据。分两种情况：
 
-- 状态卡“数据来源：官方数据（适配器未配置）”；
-- 空态“暂无官方数据”+“官方数据源适配器尚未配置…”；
-- 有“切回演示数据”和“重新同步”入口；
-- 不出现任何演示产品被伪装成官方数据。
+- 采集器**未启动**或未执行 `adb reverse`：同步失败；状态卡显示“数据来源：官方数据”和失败原因（如“无法连接 GLM 官方采集器”）；空态有“重新同步”和“切回演示数据”。
+- 采集器已启动但返回空数组/没有 active offer：状态卡“数据来源：官方数据”，空态“暂无官方数据”，说明当前官方源没有可展示优惠；仍提供“重新同步”和“切回演示数据”。
+
+两种情况都不能出现任何演示产品被伪装成官方数据。
 
 ### 6.3 来源失败
 
@@ -211,6 +223,13 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 - 状态卡显示“上次同步失败：Deterministic demo network failure”；
 - 横幅“同步失败，正在展示缓存数据，数据可能已过期”；
 - 之后选择“重复同步”或“首次同步”可恢复。
+
+官方模式的来源失败：停止采集器或断开 `adb reverse`，点“同步”。预期：
+
+- 不崩溃；
+- 状态卡显示“数据来源：官方数据”和采集器错误；
+- 若之前成功同步过，保留官方缓存并提示可能过期；
+- 不把旧价格说成实时价格。
 
 ### 6.4 数据库读取失败
 
@@ -238,7 +257,16 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 
 ## 7. 真实数据源接入边界
 
-官方模式当前固定使用 `UnconfiguredOfficialRemoteDataSource`，`fetch()` 永远失败。接入真实源时必须满足：
+### 7.1 当前 GLM 官方源
+
+- 来源：`https://www.bigmodel.cn/glm-coding`，公开个人套餐页（Lite / Pro / Max；连续包月/包季/包年）。
+- 采集：`tools/glm-collector` 用 headless Chrome 渲染页面，输出 `RemoteSyncPayload` 同构 JSON；默认监听 `127.0.0.1:8787`，5 分钟缓存，失败 503 不回退旧价。
+- Android：`GlmCodingPlanRemoteDataSource` 读取 `/v1/glm-coding-plan`；设备端通过 `adb reverse tcp:8787 tcp:8787` 访问。
+- 来源字段：`sourceUrl`、`fetchedAtEpochMillis`、`titleOrSummary`（页面原文摘要）、`officialUrl`（每个 offer）全部必填。
+- 金额：人民币分；季/年 `actualAmountMinor` 是总价，`monthlyEquivalentMinor` 是折合月价；`taxIncluded=true` 按页面含税展示处理。
+- 边界：只覆盖公开个人套餐，不含团队套餐、登录优惠、优惠券、首月立减；选择器改版会采集失败。
+
+### 7.2 接入下一条真实源必须满足
 
 1. `RemoteSourceDto`：
    - `id` 使用真实 sourceId，不得使用 `demo-` 前缀；
@@ -251,12 +279,11 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 4. 价格、币种、计费周期、地区、含税口径必须来自来源，不得猜测或回填。
 5. 同一 `sourceId` 的类型不可变；已有 DEMO 来源不能被后续官方同步改写成 OFFICIAL。
 6. 快照只追加，不覆盖/删除；UI 不得把旧缓存描述成实时数据。
+7. 季/年/月不能直接比总价；有多个 active offer 时按折合月均比较。
+8. 采集失败必须有明确错误并保留缓存，不能回退旧价并标记为实时。
 
-接入步骤与字段示例见 [DATA_SOURCE_INTEGRATION.md](DATA_SOURCE_INTEGRATION.md)。接入后还需要：
-
-- 把 `officialAdapterConfigured` 改为 `true`；
-- 把 `officialSourceId` 改成真实 sourceId；
-- 为真实适配器补协议/字段/失败测试，再替换 `UnconfiguredOfficialRemoteDataSource`。
+新适配器应实现 `RemoteDataSource`，并在 `AppContainer` 注册独立 sourceId；先补标准化/失败测试，再接网络。
+接入步骤与字段示例见 [DATA_SOURCE_INTEGRATION.md](DATA_SOURCE_INTEGRATION.md)。
 
 ## 8. 生产能力缺口
 
@@ -276,20 +303,21 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 
 ### 其他缺口
 
+- 官方 GLM 源依赖开发机上的 Node/Chrome 采集器，不是可部署的生产服务；没有采集监控/告警。
 - 没有后端、账号、支付、真实订阅或价格校验。
 - 没有 release 签名、CI、Play 配置、混淆策略。
-- 设备矩阵只验证过 OPD2515 / API 37。
+- 设备矩阵只验证过 OPD2515 / API 37；阶段 12 的 86 项设备测试已在该设备通过，但 API 26–36/其他 ROM 仍属未验证。
 - 通知渠道关闭、长期省电、长期 soak 未验证。
 - 深链“已有 saved state + 全新 intent”罕见路径未覆盖。
 
 ## 9. 真实与演示数据隔离规则
 
 - 演示数据：`sourceId = demo-local`，`DataSourceType.DEMO`；source/product/plan/offer ID 必须带 `demo-` 前缀。
-- 官方数据：真实 sourceId，不使用 `demo-` 前缀；必须带 `sourceUrl`、`fetchedAt`、`titleOrSummary`。
+- 官方数据：`sourceId = glm-coding-plan-official`（GLM），`DataSourceType.OFFICIAL_WEB`，不使用 `demo-` 前缀；必须带 `sourceUrl`、`fetchedAt`、`titleOrSummary`。
 - 首页按当前 `DataSourceMode` 过滤 `offer.source.type`；切换模式只改变展示范围，不 UPDATE 历史 `SourceInfo`、快照或同步元数据。
 - 数据源类型不可变；同一 sourceId 若从 DEMO 改成 OFFICIAL，同步直接失败并回滚。
 - 演示记录永远不会被标记成官方历史；官方空态不会展示演示产品。
-- 演示数据不是实时优惠；官方模式未配置时也不会产生“官方实时数据”。
+- 演示数据不是实时优惠；官方采集失败时也不会产生/回退“官方实时数据”。
 
 ## 10. 功能、测试与未验证项对照
 
@@ -301,23 +329,36 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 | 只通知已订阅产品一次 | `NotificationDispatcherTest`、`OfferSyncServiceIntegrationTest` | 通过 |
 | 点击通知进入详情 | `NotificationDeepLinkTest`（7 项） | 通过 |
 | 折线图、历史最低、币种、周期、优惠时间 | `DetailScreenTest`、`PriceChartModelTest`、`HomeViewModelTest` | 通过 |
+| 季付总价/折合月均、按最低月均选择首页 offer | `PriceChartModelTest`、`HomeScreenTest` | 通过（JVM/仪器） |
 | 官网 URL、Custom Tab 回退、点击统计 | `OfficialOfferLauncherTest`、`OfficialUrlEndToEndTest`、`StatisticsViewModelTest` | 通过 |
 | 无网络、空数据、来源失败、DB 错误恢复 | `HomeScreenTest`、`HomeViewModelTest` | 通过 |
 | 干净构建、JVM、Lint | 本文件第 1 节 | 通过 |
 | 阶段 11 手工设备验收 1–8 | `docs/evidence/2026-10-30/phase11/device-manual/` | 通过（部分异常项由自动化覆盖，见清单第 12 节） |
+| GLM 采集器 JSON 契约 | `tools/glm-collector/test/payload.test.mjs` | 通过（4 / 4） |
+| GLM 适配器 → Room 集成 | `GlmCodingPlanSourceIntegrationTest` | 通过（仪器） |
+| 阶段 12 设备测试（86 项） | `connectedDebugAndroidTest` | 通过（86 / 86） |
 | API 26–36、其他 ROM、通知渠道/省电 soak | 无 | **未验证** |
-| 真实官方数据源 | 未实现，只有 Fail-closed 占位 | **未实现** |
+| GLM 官方源真机采集/同步 | `docs/evidence/2026-10-30/phase12/device-manual/` | 通过（手工 + 86 项自动化） |
 | FCM / 服务端推送 | 未配置 | **未实现** |
 | 发布签名、CI、Play | 未配置 | **未实现** |
 
-“通过”不等于生产验收：设备测试只证明 OPD2515 / API 37 且自动化覆盖到的路径；阶段 11 手工场景已完成，但设备矩阵、真实源和长期稳定性仍需补齐。
+“通过”不等于生产验收：设备测试只证明 OPD2515 / API 37 且自动化覆盖到的路径；阶段 11 手工场景与阶段 12 官方模式真机场景已完成，设备矩阵、真实源生产化与长期稳定性仍需补齐。
 
 ## 11. 证据
 
+- 阶段 12 构建、采集器、JVM 与设备证据：`docs/evidence/2026-10-30/phase12/`
+  - `collector-payload.json`、`collector-health.json`、`collector-serve.log`
+  - `collector-tests.txt`
+  - `unit-test-results/`（22 XML）、`lint-results-debug.txt`
+  - `phase12-connected-test-results.xml`（86 / 86）、`phase12-connected.log`、`phase12-device.txt`
+  - `device-manual/`（官方首页/季付详情/采集器失败/切回演示截图与 UI dump）
+  - `final-status.txt`、`environment.txt`
 - 阶段 10 设备与构建证据：`docs/evidence/2026-10-30/phase10-*`
 - 阶段 11 构建证据：`docs/evidence/2026-10-30/phase11/`
 - 阶段 11 手工验收截图/UI dump/通知记录：`docs/evidence/2026-10-30/phase11/device-manual/`
 - 阶段 11 手工验收清单：[PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md)
 - 阶段 11 进度：[PHASE11_PROGRESS.md](PHASE11_PROGRESS.md)
+- 阶段 12 进度：[PHASE12_PROGRESS.md](PHASE12_PROGRESS.md)
+- GLM 采集器说明：[../tools/glm-collector/README.md](../tools/glm-collector/README.md)
 - 交接文档：[HANDOFF.md](HANDOFF.md)
 - 官方源接入契约：[DATA_SOURCE_INTEGRATION.md](DATA_SOURCE_INTEGRATION.md)

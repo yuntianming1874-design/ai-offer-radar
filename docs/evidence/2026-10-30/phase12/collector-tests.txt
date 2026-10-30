@@ -1,0 +1,12 @@
+✔ parses yuan text into minor units without floating point drift (0.639458ms)
+✔ builds three products, three plans and nine official offers (0.561584ms)
+✔ rejects a partial or out-of-order tab set (0.593083ms)
+✔ rejects missing tiers, missing prices and impossible discounts (0.210875ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43.991625

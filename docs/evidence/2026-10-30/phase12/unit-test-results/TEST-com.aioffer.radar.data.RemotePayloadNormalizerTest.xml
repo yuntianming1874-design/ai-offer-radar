@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.data.RemotePayloadNormalizerTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-30T16:14:27" hostname="192.168.31.129" time="0.014">
+  <properties/>
+  <testcase name="officialUrl_isPreservedFromRemoteOffer" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.006"/>
+  <testcase name="negativeAmount_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <testcase name="officialSourceWithoutUrl_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <testcase name="officialSourceUsingDemoId_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.0"/>
+  <testcase name="demoPayloadUsingOfficialProductId_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <testcase name="offerWithoutOriginalTitle_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <testcase name="sourceWithoutFetchTime_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <testcase name="validDemoPayload_normalizesIntoDomainModels" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <testcase name="officialPayloadUsingDemoProductId_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

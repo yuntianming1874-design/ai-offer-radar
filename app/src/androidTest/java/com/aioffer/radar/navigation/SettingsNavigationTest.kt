@@ -70,14 +70,14 @@ class SettingsNavigationTest {
             composeRule.onNodeWithText("设置").performClick()
             waitForText("同步偏好")
             composeRule.onNodeWithText("官方数据").performClick()
-            waitForText("官方数据源适配器尚未配置：当前不会产生或缓存官方实时数据。可随时切回演示数据查看演示内容。")
+            waitForText("来自 GLM Coding Plan 官方套餐页，经本机渲染采集器抓取")
 
             scenario.recreate()
-            waitForText("官方数据源适配器尚未配置：当前不会产生或缓存官方实时数据。可随时切回演示数据查看演示内容。")
+            waitForText("来自 GLM Coding Plan 官方套餐页，经本机渲染采集器抓取")
 
             Espresso.pressBack()
-            waitForText("数据来源：官方数据（适配器未配置）")
-            composeRule.onNodeWithText("数据来源：官方数据（适配器未配置）").assertIsDisplayed()
+            waitForText("数据来源：官方数据")
+            composeRule.onNodeWithText("数据来源：官方数据").assertIsDisplayed()
         }
     }
 
@@ -86,13 +86,13 @@ class SettingsNavigationTest {
         application.container.appSettingsStore.setDataSourceMode(DataSourceMode.OFFICIAL)
 
         ActivityScenario.launch(MainActivity::class.java).use {
-            waitForText("数据来源：官方数据（适配器未配置）")
-            composeRule.onNodeWithText("数据来源：官方数据（适配器未配置）").assertIsDisplayed()
+            waitForText("数据来源：官方数据")
+            composeRule.onNodeWithText("数据来源：官方数据").assertIsDisplayed()
         }
 
         ActivityScenario.launch(MainActivity::class.java).use {
-            waitForText("数据来源：官方数据（适配器未配置）")
-            composeRule.onNodeWithText("数据来源：官方数据（适配器未配置）").assertIsDisplayed()
+            waitForText("数据来源：官方数据")
+            composeRule.onNodeWithText("数据来源：官方数据").assertIsDisplayed()
         }
     }
 
