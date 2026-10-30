@@ -1,0 +1,7 @@
+List of devices attached
+<device-serial>               device usb:1-1 product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:8
+
+
+OPD2515
+17
+37

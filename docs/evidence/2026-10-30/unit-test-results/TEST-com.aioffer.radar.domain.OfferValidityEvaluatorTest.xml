@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.domain.OfferValidityEvaluatorTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T17:12:59" hostname="192.168.31.129" time="0.002">
+  <properties/>
+  <testcase name="afterEnd_isExpired" classname="com.aioffer.radar.domain.OfferValidityEvaluatorTest" time="0.001"/>
+  <testcase name="beforeStart_isNotYetEffective" classname="com.aioffer.radar.domain.OfferValidityEvaluatorTest" time="0.0"/>
+  <testcase name="atStart_isActive" classname="com.aioffer.radar.domain.OfferValidityEvaluatorTest" time="0.0"/>
+  <testcase name="atEnd_isExpired" classname="com.aioffer.radar.domain.OfferValidityEvaluatorTest" time="0.001"/>
+  <testcase name="withoutEnd_isActiveAfterStart" classname="com.aioffer.radar.domain.OfferValidityEvaluatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,10 @@
+[历史快照：19:11 设备未连接时记录；最终结果见 final-status.txt]
+时间：2026-10-30 19:11:09 CST
+命令：./gradlew --offline --no-daemon clean assembleDebug testDebugUnitTest lintDebug
+结果：BUILD SUCCESSFUL，57s，55 tasks
+JVM：21 suites / 127 tests / 0 failures / 0 errors / 0 skipped
+Lint：0 errors / 2 warnings
+
+设备连接检查：
+List of devices attached
+

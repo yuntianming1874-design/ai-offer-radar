@@ -1,0 +1,323 @@
+# AI 优惠雷达：交付说明
+
+更新时间：2026-10-30 22:36  
+适用版本：本地演示版（`com.aioffer.radar`，版本号见 `app/build.gradle.kts`）  
+交付结论：可构建、可安装、可测试；**不是生产版本**，没有真实官方数据源、后端、账号、支付或 FCM。
+
+> 重要：内置数据全部是确定性演示数据。演示模式下首页固定显示“演示数据，非实时优惠”。演示价格、折扣、历史、更新时间均不代表任何官网当前状态。
+
+## 1. 本阶段交付状态
+
+| 项目 | 状态 |
+|---|---|
+| 干净构建 `clean assembleDebug testDebugUnitTest lintDebug` | 通过：`BUILD SUCCESSFUL`，50s，55 tasks（最终复跑） |
+| JVM 单元测试 | 127 / 127，0 failed / 0 errors / 0 skipped（21 suites） |
+| Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
+| 设备自动化测试 | 84 / 84，0 failed / 0 errors / 0 skipped（2026-10-30 22:34，1m 6s；OPD2515 / API 37） |
+| 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
+| 交付说明 | 已完成（本文件） |
+
+阶段 11 的构建、手工验收与文档已完成。部分无法在正常安装中自然制造的异常（非法 URL、无浏览器、数据库读取失败、清除记录）由仪器/单元测试覆盖，不能写成手工通过；详见 [PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md) 第 12 节。
+
+## 2. 构建、运行和测试
+
+### 2.1 环境
+
+- JDK 17
+- Android SDK Platform 35、Build-Tools 35
+- Gradle Wrapper 8.9（仓库自带）
+- 最低 Android 8.0（API 26），targetSdk 35
+- 真机需开启 USB 调试；`adb devices -l` 能看到设备
+
+`local.properties`（不提交）：
+
+```properties
+sdk.dir=/Users/<you>/Library/Android/sdk
+```
+
+### 2.2 构建与安装
+
+```bash
+./gradlew assembleDebug
+./gradlew installDebug
+# 或
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.aioffer.radar/.MainActivity
+```
+
+APK：`app/build/outputs/apk/debug/app-debug.apk`
+
+### 2.3 测试与静态检查
+
+```bash
+./gradlew clean assembleDebug testDebugUnitTest lintDebug
+./gradlew connectedDebugAndroidTest
+```
+
+沙箱/受限环境（`~/.gradle`、`~/.android` 不可写）可用：
+
+```bash
+export GRADLE_USER_HOME="$PWD/.gradle-home"
+export ANDROID_USER_HOME="$PWD/.android-home"
+export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
+./gradlew --offline --no-daemon clean assembleDebug testDebugUnitTest lintDebug
+./gradlew --offline --no-daemon connectedDebugAndroidTest
+```
+
+多设备：
+
+```bash
+ANDROID_SERIAL=<serial> ./gradlew connectedDebugAndroidTest
+```
+
+ColorOS/OPPO 安装注意：
+
+- Gradle 安装 debug APK 时可能弹 `com.oplus.appdetail` 安装向导，需要点“继续安装/完成”，否则 `connectedDebugAndroidTest` 会卡在安装。
+- 重装后测试 Activity 可能弹“30 天内允许”。
+- **不要禁用 `com.oplus.appdetail`**：禁用后会落到系统安装器，对无 launcher icon 的 test APK 无法继续。
+
+### 2.4 清除数据后首装检查
+
+标准做法：
+
+```bash
+adb shell pm clear com.aioffer.radar
+adb shell am start -n com.aioffer.radar/.MainActivity
+```
+
+**ColorOS 实测限制**：本机 shell 执行 `pm clear` 会抛 `SecurityException: ... does not have permission android.permission.CLEAR_APP_USER_DATA`，执行 `pm revoke ... POST_NOTIFICATIONS` 同样被拒绝。需要清数据时改用卸载重装，或系统设置中“清除数据”：
+
+```bash
+adb uninstall com.aioffer.radar
+adb install app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.aioffer.radar/.MainActivity
+```
+
+本次阶段 11 验收即通过“此前未安装 + 全新安装”完成首装；通知权限通过 App 内“设置 → 开启通知”授予。
+
+预期：
+
+- 首页标题“AI 优惠雷达”；
+- 固定横幅“演示数据，非实时优惠”；
+- 状态卡“数据来源：演示数据”“最后成功同步：…北京时间”；
+- 首次启动会自动同步一次，展示 KIMI / DEEPSEEK / GLM 三张演示卡；
+- 全程不出现“实时优惠”“官方实时数据”等表述。
+
+首次启动若通知未授权，会显示通知提示横幅；点“稍后”会持久化 `PROMPTED`，之后不再反复弹出（系统权限仍可在设置中修改）。
+
+## 3. 演示场景切换
+
+首页“切换演示场景”只在 `DEMO` 模式显示。选择场景会设置下一场景并立即触发一次同步；如果当前正在同步，等本次结束后再试。也可以点顶部“同步”手动触发。
+
+| 场景 | 预期行为 | 关键观察点 |
+|---|---|---|
+| 首次同步 | 恢复基线：KIMI ¥100、DEEPSEEK ¥200、GLM ¥300（每月） | 3 个产品；无历史最低徽标；首次成功只建基线 |
+| 新增优惠 | 为 KIMI 增加 ¥70/月新优惠 | KIMI 出现更便宜的第二个有效优惠；已订阅时一条新优惠通知 |
+| 价格下降 | KIMI 的 welcome offer 从当前价降到 ¥80 | 详情出现历史最低；已订阅时一条降价通知。若 ¥70 新优惠仍有效，首页卡片继续显示最低价 ¥70 |
+| 价格上涨 | KIMI 的 welcome offer 从当前价涨到 ¥110 | 价格上涨通知；详情中 welcome 高于历史低点。若 ¥70 新优惠仍有效，首页卡片继续显示 ¥70 |
+| 重复同步 | 不制造数据变化 | 不新增优惠/快照/通知 |
+| 网络失败 | 抛出确定性网络异常，不改业务数据 | 保留缓存；状态卡显示失败原因；不清空 `lastSuccessfulSyncAt` |
+
+注意：
+
+- 场景会累积：先执行“新增优惠”后，KIMI 同时存在 welcome offer 和 ¥70 新优惠。随后涨价/降价只改 welcome offer，首页卡片显示的是最低价 ¥70；必须进详情才能看到 welcome 的 ¥110/¥80。若单独从基线执行，首页会显示 ¥110/¥80。
+- “首次同步”会重置演示价格；如果此时已订阅 KIMI 且当前价不是 ¥100，可能被识别成一次价格变化并产生通知；这是预期行为，不是 bug。
+- 场景和 KIMI 演示价格写入 DataStore，杀进程/重启后保持。
+- 演示数据源 `sourceUrl` 为空；`officialUrl` 只是 Kimi/DeepSeek/GLM 的官网入口，不是价格来源。
+
+## 4. 通知验证
+
+前置：
+
+1. Android 13+ 授权通知：
+   ```bash
+   adb shell pm grant com.aioffer.radar android.permission.POST_NOTIFICATIONS
+   ```
+   或在首页横幅点“开启通知”。ColorOS 本机 shell 可能拒绝 `pm grant/revoke`（`REVOKE_RUNTIME_PERMISSIONS` 权限不足），优先用 App 内“设置 → 开启通知”或系统设置。
+2. 确认通知渠道 `price_changes` 未被关闭：
+   ```bash
+   adb shell dumpsys notification --noredact | grep -A8 'price_changes'
+   ```
+3. 在首页只订阅 KIMI（不要订阅 DEEPSEEK/GLM）。
+
+步骤：
+
+1. 选择“价格下降”并等待同步完成。
+2. 下拉通知栏，应只有一条 KIMI 通知，文案“价格下降，点击查看详情”；DEEPSEEK/GLM 没有通知。
+3. 选择“重复同步”，再次同步；不应出现第二条相同通知。
+4. 点击通知，应进入 KIMI 详情页；返回一次回首页。
+5. 取消订阅 KIMI，选择“价格下降”或“价格上涨”，再同步；不应再新增 KIMI 通知。
+
+实现语义：
+
+- 通知事件有稳定事件 ID，数据库唯一约束 + `wasDelivered` 去重；只对已订阅产品发送。
+- 通知 `SENT` 表示已提交给系统，不表示用户已看到。
+- 权限拒绝或渠道关闭时事件保持 `PENDING`，恢复后补发；不会为了“看起来成功”而标记已发送。
+- 通知由本地同步触发（手动同步或 WorkManager），不是服务端推送。
+
+## 5. 详情、图表与官网跳转
+
+从首页“查看详情”进入 KIMI 详情，核对：
+
+- 当前有效优惠：原价、现价、折扣、生效时间、截止时间（演示为“长期有效”）；
+- 币种：`CNY`，展示为 `¥`；
+- 计费周期：月付；年付数据会显示“折合月均”；
+- 价格历史：至少两个历史点后出现折线图，摘要包含点数、最高、最低、起止时间；不足两个点时显示“证据不足，将从首次同步开始积累”；
+- 历史最低徽标只在同一比较分组存在更早的合格历史快照且当前价不高于最低价时出现。
+
+“去订阅”：
+
+- 打开 `https://kimi.moonshot.cn/`（DeepSeek/GLM 同理）；
+- 优先 Custom Tab，无 Custom Tab 时回退系统浏览器；
+- 可用以下命令核对实际启动的 URL：
+  ```bash
+  adb shell dumpsys activity activities | grep -m1 'dat=https'
+  ```
+- 返回 App 后，首页“点击统计”中 KIMI 的跳转次数 +1；
+- 统计记录存 Room，杀进程/重启后仍保留；
+- 统计页可“清除记录”，需要二次确认。
+
+## 6. 异常与边界验证
+
+### 6.1 无网络但有缓存
+
+```bash
+adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc data disable
+```
+
+回到首页点“同步”，预期：
+
+- 继续展示缓存产品；
+- 显示“当前无网络，正在展示缓存数据，数据可能已过期”；
+- 状态卡显示“当前离线，展示的是缓存数据，可能已过期”；
+- 不崩溃，不把缓存描述成实时数据。
+
+恢复网络后关闭飞行模式。
+
+### 6.2 空数据
+
+设置 → 数据源 → 官方数据。预期：
+
+- 状态卡“数据来源：官方数据（适配器未配置）”；
+- 空态“暂无官方数据”+“官方数据源适配器尚未配置…”；
+- 有“切回演示数据”和“重新同步”入口；
+- 不出现任何演示产品被伪装成官方数据。
+
+### 6.3 来源失败
+
+选择“网络失败”并同步。预期：
+
+- 已有产品继续展示；
+- 状态卡显示“上次同步失败：Deterministic demo network failure”；
+- 横幅“同步失败，正在展示缓存数据，数据可能已过期”；
+- 之后选择“重复同步”或“首次同步”可恢复。
+
+### 6.4 数据库读取失败
+
+日常安装没有故障注入入口。验证方式：
+
+- 运行 `HomeScreenTest.databaseError_showsRecoverableRetryEntry` / `databaseErrorWithCachedContent_keepsRetryEntryVisible`；
+- 异常时 UI 显示“本地数据读取失败，请重试”+原因+“重试读取”；
+- 已有缓存时状态卡保留“重试读取”，不会因为错误把内容清空。
+
+### 6.5 Custom Tab 不可用 / 非法 URL
+
+真机通常至少有一个浏览器，无法自然制造“无浏览器”。使用仪器测试验证：
+
+- `OfficialOfferLauncherTest.unavailableCustomTab_fallsBackToBrowserOnce`
+- `OfficialOfferLauncherTest.noAvailableBrowser_returnsErrorWithoutThrowing`
+- `DetailViewModelTest` 的非法 URL/打开失败分支
+
+对应 UI 文案：
+
+- 未找到浏览器：“未找到可用浏览器，无法打开官网”
+- 非法地址：“官网订阅地址无效，无法打开”
+- 其他打开失败：“官网打开失败，请稍后重试”
+
+如需在测试机上手工验证“无浏览器”，可临时禁用浏览器包并在测试后恢复；不要在个人主力机上操作。
+
+## 7. 真实数据源接入边界
+
+官方模式当前固定使用 `UnconfiguredOfficialRemoteDataSource`，`fetch()` 永远失败。接入真实源时必须满足：
+
+1. `RemoteSourceDto`：
+   - `id` 使用真实 sourceId，不得使用 `demo-` 前缀；
+   - `sourceType` 为 `OFFICIAL_API` / `OFFICIAL_RSS` / `OFFICIAL_WEB`；
+   - `sourceUrl` 必填；
+   - `fetchedAtEpochMillis > 0`；
+   - `titleOrSummary` 必填，保存原文标题/摘要。
+2. 产品/套餐/优惠 ID 不得使用 `demo-` 前缀。
+3. 优惠必须能追溯到来源；没有来源 URL、抓取时间或原文信息的记录，标准化会失败，不得标记为官方真实数据。
+4. 价格、币种、计费周期、地区、含税口径必须来自来源，不得猜测或回填。
+5. 同一 `sourceId` 的类型不可变；已有 DEMO 来源不能被后续官方同步改写成 OFFICIAL。
+6. 快照只追加，不覆盖/删除；UI 不得把旧缓存描述成实时数据。
+
+接入步骤与字段示例见 [DATA_SOURCE_INTEGRATION.md](DATA_SOURCE_INTEGRATION.md)。接入后还需要：
+
+- 把 `officialAdapterConfigured` 改为 `true`；
+- 把 `officialSourceId` 改成真实 sourceId；
+- 为真实适配器补协议/字段/失败测试，再替换 `UnconfiguredOfficialRemoteDataSource`。
+
+## 8. 生产能力缺口
+
+### FCM 尚未配置
+
+- 没有 `google-services.json`、没有 Firebase SDK、没有设备 token 注册。
+- `NoOpPushNotificationService` 只是边界；当前所有通知都是本地生成和本地派发。
+- 没有后端触发、用户分群、送达回执或服务端去重。
+- 接入 FCM 需要：Firebase 项目、google-services 配置、token 注册/刷新、后端推送、通知权限与渠道、深链、失败重试。
+
+### WorkManager 非实时
+
+- 周期任务为 15 分钟，约束为联网；系统会延迟、合并或跳过。
+- 设备休眠、厂商省电、后台限制会进一步延迟。
+- 它不能替代服务端 FCM；演示时用首页“同步”立即触发。
+- 关闭“自动同步”会取消唯一周期任务；重启后按持久化偏好恢复，不会无条件复活。
+
+### 其他缺口
+
+- 没有后端、账号、支付、真实订阅或价格校验。
+- 没有 release 签名、CI、Play 配置、混淆策略。
+- 设备矩阵只验证过 OPD2515 / API 37。
+- 通知渠道关闭、长期省电、长期 soak 未验证。
+- 深链“已有 saved state + 全新 intent”罕见路径未覆盖。
+
+## 9. 真实与演示数据隔离规则
+
+- 演示数据：`sourceId = demo-local`，`DataSourceType.DEMO`；source/product/plan/offer ID 必须带 `demo-` 前缀。
+- 官方数据：真实 sourceId，不使用 `demo-` 前缀；必须带 `sourceUrl`、`fetchedAt`、`titleOrSummary`。
+- 首页按当前 `DataSourceMode` 过滤 `offer.source.type`；切换模式只改变展示范围，不 UPDATE 历史 `SourceInfo`、快照或同步元数据。
+- 数据源类型不可变；同一 sourceId 若从 DEMO 改成 OFFICIAL，同步直接失败并回滚。
+- 演示记录永远不会被标记成官方历史；官方空态不会展示演示产品。
+- 演示数据不是实时优惠；官方模式未配置时也不会产生“官方实时数据”。
+
+## 10. 功能、测试与未验证项对照
+
+| 功能/场景 | 自动化证据 | 状态 |
+|---|---|---|
+| 首页演示横幅、来源/更新时间（自动化） | `HomeScreenTest` | 通过（仪器） |
+| 单个订阅/取消、全部订阅、重启持久化 | `SubscriptionPersistenceTest`、`HomeViewModelTest`、`HomeScreenTest` | 通过 |
+| 首次同步、新增优惠、涨价、降价、重复同步、网络失败 | `OfferSyncServiceIntegrationTest`（13 项） | 通过 |
+| 只通知已订阅产品一次 | `NotificationDispatcherTest`、`OfferSyncServiceIntegrationTest` | 通过 |
+| 点击通知进入详情 | `NotificationDeepLinkTest`（7 项） | 通过 |
+| 折线图、历史最低、币种、周期、优惠时间 | `DetailScreenTest`、`PriceChartModelTest`、`HomeViewModelTest` | 通过 |
+| 官网 URL、Custom Tab 回退、点击统计 | `OfficialOfferLauncherTest`、`OfficialUrlEndToEndTest`、`StatisticsViewModelTest` | 通过 |
+| 无网络、空数据、来源失败、DB 错误恢复 | `HomeScreenTest`、`HomeViewModelTest` | 通过 |
+| 干净构建、JVM、Lint | 本文件第 1 节 | 通过 |
+| 阶段 11 手工设备验收 1–8 | `docs/evidence/2026-10-30/phase11/device-manual/` | 通过（部分异常项由自动化覆盖，见清单第 12 节） |
+| API 26–36、其他 ROM、通知渠道/省电 soak | 无 | **未验证** |
+| 真实官方数据源 | 未实现，只有 Fail-closed 占位 | **未实现** |
+| FCM / 服务端推送 | 未配置 | **未实现** |
+| 发布签名、CI、Play | 未配置 | **未实现** |
+
+“通过”不等于生产验收：设备测试只证明 OPD2515 / API 37 且自动化覆盖到的路径；阶段 11 手工场景已完成，但设备矩阵、真实源和长期稳定性仍需补齐。
+
+## 11. 证据
+
+- 阶段 10 设备与构建证据：`docs/evidence/2026-10-30/phase10-*`
+- 阶段 11 构建证据：`docs/evidence/2026-10-30/phase11/`
+- 阶段 11 手工验收截图/UI dump/通知记录：`docs/evidence/2026-10-30/phase11/device-manual/`
+- 阶段 11 手工验收清单：[PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md)
+- 阶段 11 进度：[PHASE11_PROGRESS.md](PHASE11_PROGRESS.md)
+- 交接文档：[HANDOFF.md](HANDOFF.md)
+- 官方源接入契约：[DATA_SOURCE_INTEGRATION.md](DATA_SOURCE_INTEGRATION.md)

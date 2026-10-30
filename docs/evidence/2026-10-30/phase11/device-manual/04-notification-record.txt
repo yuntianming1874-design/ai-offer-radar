@@ -1,0 +1,21 @@
+阶段 11 通知验收记录
+设备：OPD2515 / Android 17 / API 37 / serial <device-serial>
+时间：2026-10-30 22:28 北京时间
+条件：仅 KIMI 订阅；通知权限已通过设置页授予；选择“价格下降”并等待同步完成。
+
+`adb shell cmd notification list` 中属于本应用的记录（仅 1 条）：
+
+0|com.aioffer.radar|1001|PRICE_DECREASE:demo-local:demo-kimi-welcome:demo-kimi:demo-kimi-standard:CN:CNY:MONTHLY:true:1780272000000:10000:8000|10416
+
+`adb shell dumpsys notification --noredact` 关键字段：
+
+android.title=String (KIMI)
+android.text=String (价格下降，点击查看详情)
+channel=price_changes
+flags=AUTO_CANCEL
+
+通知栏截图：04-notification-shade.png
+通知栏 UI dump：04-notification-shade.xml
+
+点击通知后进入 KIMI 详情：05-notification-deeplink.png / .xml。
+之后选择“重复同步”再同步，`cmd notification list` 中本应用记录为 NONE（无第二条）：04-notification-list-after-repeat.txt。

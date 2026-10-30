@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-29T17:12:59" hostname="192.168.31.129" time="0.006">
+  <properties/>
+  <testcase name="onlyFreeAndNegativeHistory_isNotPaidHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.001"/>
+  <testcase name="yearlyHistory_doesNotPolluteMonthlyHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.0"/>
+  <testcase name="belowAllPaidHistory_isHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.0"/>
+  <testcase name="aboveExistingLowest_isNotHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.0"/>
+  <testcase name="trialHistory_doesNotLowerPaidHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.0"/>
+  <testcase name="equalToExistingLowest_isHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.001"/>
+  <testcase name="otherComparisonGroupsOnly_areNotHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.002"/>
+  <testcase name="freeTrialCandidate_isNotMarkedAsPaidHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.0"/>
+  <testcase name="freeAndNegativeHistory_doNotRaisePaidLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.0"/>
+  <testcase name="onlyYearlyHistory_isNotMonthlyHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.001"/>
+  <testcase name="withoutHistory_isNotHistoricalLowest" classname="com.aioffer.radar.domain.HistoricalLowestEvaluatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,21 @@
+阶段 11 最终状态（设备重连后补记）
+时间：2026-10-30 22:36 CST
+设备：OPD2515 / Android 17 / API 37 / serial <device-serial>
+
+步骤 9（22:33）：
+命令：./gradlew --offline --no-daemon clean assembleDebug testDebugUnitTest lintDebug
+结果：BUILD SUCCESSFUL，50s，55 tasks
+JVM：21 suites / 127 tests / 0 failures / 0 errors / 0 skipped
+Lint：0 errors / 2 warnings
+
+设备自动化（22:34）：
+命令：./gradlew --offline --no-daemon connectedDebugAndroidTest
+结果：84 tests / 0 failures / 0 errors / 0 skipped
+BUILD SUCCESSFUL in 1m 6s
+XML：phase11/phase11-connected-test-results.xml
+
+手工验收（22:19–22:32）：
+步骤 1–8 已执行；证据在 phase11/device-manual/。
+ColorOS 限制：adb pm clear / pm revoke POST_NOTIFICATIONS 被 shell 权限拒绝；首装使用全新安装，通知权限通过 App 内设置授予。
+
+说明：同目录 build-and-device-status.txt 是 19:11 设备未连接时的早期快照，保留作过程记录，不代表最终结果。

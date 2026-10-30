@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-29T15:48:06" hostname="192.168.31.129" time="0.024">
+  <properties/>
+  <testcase name="networkFailure_doesNotReplaceLastSuccessfulPayload" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.016"/>
+  <testcase name="processRestart_restoresNetworkFailureScenario" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.0"/>
+  <testcase name="everyDemoOffer_hasAValidHttpsOfficialUrl" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.002"/>
+  <testcase name="processRestart_restoresNewOfferWithoutDuplicatingIt" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.002"/>
+  <testcase name="initialPayload_usesExplicitDemoIdentifiers" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.001"/>
+  <testcase name="newOfferAndRepeat_returnDeterministicPayloads" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.001"/>
+  <testcase name="processRestart_restoresPriceDecreaseWithoutCreatingANewChange" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.0"/>
+  <testcase name="priceScenarios_returnSpecifiedAmounts" classname="com.aioffer.radar.core.network.DemoRemoteDataSourceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

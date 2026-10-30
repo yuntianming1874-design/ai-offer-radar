@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.domain.OfficialUrlValidatorTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-29T15:48:06" hostname="192.168.31.129" time="0.0">
+  <properties/>
+  <testcase name="unsupportedSchemesAndUserInfo_areRejected" classname="com.aioffer.radar.domain.OfficialUrlValidatorTest" time="0.0"/>
+  <testcase name="emptyMalformedAndInvalidHosts_areRejected" classname="com.aioffer.radar.domain.OfficialUrlValidatorTest" time="0.0"/>
+  <testcase name="production_rejectsHttpButDemoModeAllowsIt" classname="com.aioffer.radar.domain.OfficialUrlValidatorTest" time="0.0"/>
+  <testcase name="httpsUrl_withValidHost_isAccepted" classname="com.aioffer.radar.domain.OfficialUrlValidatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

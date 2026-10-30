@@ -1,0 +1,6 @@
+date: 2026-10-30T13:16:00+08:00
+serial: <device-serial>
+model: OPD2515
+release: 17
+sdk: 37
+build: OPD2515_17.0.0.103(CN01)

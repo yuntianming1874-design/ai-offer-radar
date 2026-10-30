@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.navigation.AppRoutesTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-29T17:51:44" hostname="192.168.31.129" time="0.001">
+  <properties/>
+  <testcase name="statisticsRoute_isStable" classname="com.aioffer.radar.navigation.AppRoutesTest" time="0.0"/>
+  <testcase name="settingsRoute_isStable" classname="com.aioffer.radar.navigation.AppRoutesTest" time="0.0"/>
+  <testcase name="homeRoute_isStable" classname="com.aioffer.radar.navigation.AppRoutesTest" time="0.0"/>
+  <testcase name="detailRoute_encodesProductId" classname="com.aioffer.radar.navigation.AppRoutesTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

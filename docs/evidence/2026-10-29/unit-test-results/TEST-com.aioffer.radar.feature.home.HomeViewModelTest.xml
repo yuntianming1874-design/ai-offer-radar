@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.feature.home.HomeViewModelTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-29T15:48:06" hostname="192.168.31.129" time="0.058">
+  <properties/>
+  <testcase name="syncFailure_keepsCachedProducts" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.016"/>
+  <testcase name="subscription_isImmediateAndSurvivesViewModelRecreation" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.01"/>
+  <testcase name="unsubscribe_updatesImmediately" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.004"/>
+  <testcase name="failedInitialSync_showsError" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="successfulSyncWithoutProducts_showsEmpty" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.004"/>
+  <testcase name="offlineWithCache_keepsContentAndSkipsSync" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="initialSync_showsContentAndDemoMode" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.003"/>
+  <testcase name="subscribeAll_marksEveryProductImmediately" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.007"/>
+  <testcase name="manualRefresh_exposesSyncingAndPreventsDuplicateSync" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.003"/>
+  <testcase name="failedSubscription_rollsBackAndShowsError" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.005"/>
+  <testcase name="realMode_doesNotExposeDemoMode" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

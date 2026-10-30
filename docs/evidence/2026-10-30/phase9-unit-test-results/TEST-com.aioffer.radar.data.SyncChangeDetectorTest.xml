@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.data.SyncChangeDetectorTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-29T17:51:44" hostname="192.168.31.129" time="0.004">
+  <properties/>
+  <testcase name="priceDecrease_emitsOneDecreaseEvent" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.002"/>
+  <testcase name="unsubscribedProduct_changeDoesNotEmitNotification" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.0"/>
+  <testcase name="firstSync_createsSnapshotsWithoutNotifications" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.0"/>
+  <testcase name="newOffer_isEmittedOnlyForItsFirstChange" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.001"/>
+  <testcase name="differentComparisonKey_priceChangeIsNotCompared" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.0"/>
+  <testcase name="returningToEarlierAmount_atLaterObservation_keepsBothSnapshots" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.0"/>
+  <testcase name="priceIncrease_emitsOneIncreaseEvent" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.0"/>
+  <testcase name="futureOffer_becomingActiveEmitsActivation" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.0"/>
+  <testcase name="activeOffer_expiringEmitsExpiration" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.001"/>
+  <testcase name="eventIds_areStableForTheSameBusinessChange" classname="com.aioffer.radar.data.SyncChangeDetectorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

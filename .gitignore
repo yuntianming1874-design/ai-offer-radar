@@ -1,0 +1,18 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+.gradle-home/
+.android-home/
+.kotlin/
+
+# Local device-acceptance helper (not part of the project)
+.install-watcher.log
+.install-watcher.pid
+.install-watcher.sh
+.stop-install-watcher

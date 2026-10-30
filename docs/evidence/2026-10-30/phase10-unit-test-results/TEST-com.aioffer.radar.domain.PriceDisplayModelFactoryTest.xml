@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-30T06:49:44" hostname="192.168.31.129" time="0.003">
+  <properties/>
+  <testcase name="monthlyEquivalentCurrencyMismatch_isRejected" classname="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" time="0.002"/>
+  <testcase name="offerPriceCurrencyMismatch_isRejected" classname="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" time="0.0"/>
+  <testcase name="calculatedMonthlyEquivalent_roundsToMinorUnit" classname="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" time="0.001"/>
+  <testcase name="yearlyPrice_keepsTotalSeparateFromMonthlyEquivalent" classname="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" time="0.0"/>
+  <testcase name="oneTimePrice_hasNoMonthlyEquivalent" classname="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" time="0.0"/>
+  <testcase name="monthlyPrice_hasSameTotalAndMonthlyEquivalent" classname="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" time="0.0"/>
+  <testcase name="suppliedMonthlyEquivalent_isPreserved" classname="com.aioffer.radar.domain.PriceDisplayModelFactoryTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

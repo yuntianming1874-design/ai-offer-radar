@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.feature.statistics.StatisticsViewModelTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-29T17:51:44" hostname="192.168.31.129" time="0.004">
+  <properties/>
+  <testcase name="clearClickHistory_clearsPersistedEvents" classname="com.aioffer.radar.feature.statistics.StatisticsViewModelTest" time="0.002"/>
+  <testcase name="localReadFailure_canBeRetried" classname="com.aioffer.radar.feature.statistics.StatisticsViewModelTest" time="0.002"/>
+  <testcase name="statistics_areExposedByProduct" classname="com.aioffer.radar.feature.statistics.StatisticsViewModelTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

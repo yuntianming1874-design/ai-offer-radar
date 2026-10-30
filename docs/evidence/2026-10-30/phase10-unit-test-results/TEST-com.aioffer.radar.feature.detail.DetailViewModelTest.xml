@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.feature.detail.DetailViewModelTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-30T06:49:44" hostname="192.168.31.129" time="0.142">
+  <properties/>
+  <testcase name="missingProduct_showsNotFoundState" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.039"/>
+  <testcase name="invalidOfficialUrl_doesNotLaunchOrRecordClick" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.004"/>
+  <testcase name="offerExpiresWhileDetailIsOpen_movesFromCurrentToExpired" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.003"/>
+  <testcase name="failedLaunch_doesNotRecordClick" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.007"/>
+  <testcase name="initialDetail_selectsFirstPlanAndPartitionsOffers" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.003"/>
+  <testcase name="changingPlanAndPeriod_loadsOnlyMatchingOffersAndHistory" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.057"/>
+  <testcase name="successfulOfficialLaunch_recordsExactlyOneClickWithCurrentTime" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.009"/>
+  <testcase name="historyUpdates_areExposedInUiState" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.005"/>
+  <testcase name="unavailableBrowser_doesNotRecordClick" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.002"/>
+  <testcase name="localReadFailure_canBeRetried" classname="com.aioffer.radar.feature.detail.DetailViewModelTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

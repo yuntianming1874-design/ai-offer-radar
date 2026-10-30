@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.domain.DiscountCalculatorTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-30T14:33:31" hostname="192.168.31.129" time="0.01">
+  <properties/>
+  <testcase name="zeroCurrentPrice_isFullDiscount" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.008"/>
+  <testcase name="negativeCurrentAmount_isUnavailable" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.0"/>
+  <testcase name="zeroOriginalPrice_isUnavailable" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.001"/>
+  <testcase name="normalReduction_calculatesFraction" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.0"/>
+  <testcase name="unchangedPrice_hasZeroDiscount" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.0"/>
+  <testcase name="priceIncrease_hasNegativeDiscount" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.001"/>
+  <testcase name="differentCurrencies_areUnavailable" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.0"/>
+  <testcase name="negativeOriginalAmount_isUnavailable" classname="com.aioffer.radar.domain.DiscountCalculatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

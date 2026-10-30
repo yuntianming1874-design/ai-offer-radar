@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.aioffer.radar.core.browser.OfficialOfferLauncherTest" tests="84" failures="0" errors="0" skipped="0" time="35.043" timestamp="2026-10-30T14:34:53" hostname="localhost">
+  <properties>
+    <property name="device" value="OPD2515 - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="availableCustomTab_isPreferredWithoutBrowserFallback" classname="com.aioffer.radar.core.browser.OfficialOfferLauncherTest" time="0.008" />
+  <testcase name="unexpectedBrowserFailure_returnsOpenFailed" classname="com.aioffer.radar.core.browser.OfficialOfferLauncherTest" time="0.0" />
+  <testcase name="noAvailableBrowser_returnsErrorWithoutThrowing" classname="com.aioffer.radar.core.browser.OfficialOfferLauncherTest" time="0.0" />
+  <testcase name="unavailableCustomTab_fallsBackToBrowserOnce" classname="com.aioffer.radar.core.browser.OfficialOfferLauncherTest" time="0.0" />
+  <testcase name="migrate1To2_preservesSubscriptionsAndSyncMetadata" classname="com.aioffer.radar.core.database.RadarDatabaseMigrationTest" time="0.0" />
+  <testcase name="migrate1To2_preservesOffersSnapshotsAndSourceFetchMetadata" classname="com.aioffer.radar.core.database.RadarDatabaseMigrationTest" time="0.0" />
+  <testcase name="channelWithImportanceNone_isRecognizedAsBlocked" classname="com.aioffer.radar.core.notification.AndroidNotificationSenderTest" time="0.001" />
+  <testcase name="priceDecrease_notifiesOnlySubscribedProductOnce" classname="com.aioffer.radar.core.notification.NotificationDispatcherTest" time="0.035" />
+  <testcase name="deliveredEventWithPendingStatus_onlyRepairsStatus" classname="com.aioffer.radar.core.notification.NotificationDispatcherTest" time="0.0" />
+  <testcase name="permissionDenied_keepsEventPendingUntilGranted" classname="com.aioffer.radar.core.notification.NotificationDispatcherTest" time="0.034" />
+  <testcase name="periodicWork_hasNetworkBackoffAndSingleRegistration" classname="com.aioffer.radar.core.sync.OfferSyncWorkerTest" time="0.035" />
+  <testcase name="databaseSyncAndClickWork_doNotRunDiskIoOnTheMainThread" classname="com.aioffer.radar.core.threading.MainThreadOperationsTest" time="0.036" />
+  <testcase name="clickStatistics_countByProductAndCanBeCleared" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.034" />
+  <testcase name="activeOffers_excludeFutureAndExpiredOffers" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.008" />
+  <testcase name="offerWithMissingSource_isSkippedInsteadOfCrashing" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.027" />
+  <testcase name="currentPriceUpdate_preservesOldSnapshotAndAppendsNewOne" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.004" />
+  <testcase name="subscribeAll_subscribesEveryProduct" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.004" />
+  <testcase name="repeatedOfferSync_doesNotDuplicateOfferOrSnapshot" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.002" />
+  <testcase name="applyingSync_cannotRelabelAnExistingSourceType" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.001" />
+  <testcase name="officialOfferUrl_isReadForMatchingProductAndOffer" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.0" />
+  <testcase name="failedApplySync_rollsBackEveryWriteInTheTransaction" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.03" />
+  <testcase name="notificationEvents_areDeduplicatedByStableEventId" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.002" />
+  <testcase name="historyQuery_usesCompleteComparisonKeyAndSortsByTime" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.034" />
+  <testcase name="activeOffers_includeStartBoundaryAndExcludeEndBoundary" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.031" />
+  <testcase name="syncMetadata_isUpdatedInsideSync" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.002" />
+  <testcase name="subscribeAndCancel_updatePersistedState" classname="com.aioffer.radar.data.LocalRadarRepositoryTest" time="0.036" />
+  <testcase name="unsubscribedProduct_doesNotNotify" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.002" />
+  <testcase name="demoStateSurvivesProcessRestart_withoutNewEventsOrSnapshots" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.001" />
+  <testcase name="firstSync_buildsBaselineWithoutNotifications" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.037" />
+  <testcase name="networkFailure_preservesBusinessDataAndSuccessfulBaseline" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.002" />
+  <testcase name="priceDecrease_notifiesOnlyOnce" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.001" />
+  <testcase name="returningToEarlierAmount_appendsNewSnapshot" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.037" />
+  <testcase name="firstSync_hasNoHistoricalLowestBadge" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.001" />
+  <testcase name="repeatedSync_doesNotDuplicateOffersSnapshotsOrNotifications" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.029" />
+  <testcase name="priceDecrease_marksOnlyItsComparisonGroupAsHistoricalLowest" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.001" />
+  <testcase name="failedFirstSync_doesNotEstablishBaseline" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.033" />
+  <testcase name="priceIncrease_notifiesOnlyOnce" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.002" />
+  <testcase name="newOffer_marksOnlyTheCheaperOfferAsHistoricalLowest" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.031" />
+  <testcase name="newOffer_notifiesSubscribedProductOnlyOnce" classname="com.aioffer.radar.data.OfferSyncServiceIntegrationTest" time="0.029" />
+  <testcase name="demoAndOfficialSources_coexistWithoutChangingEachOtherTypes" classname="com.aioffer.radar.data.OfficialSourceIntegrationTest" time="0.0" />
+  <testcase name="officialFakeSource_persistsTrustMetadataIntoRoom" classname="com.aioffer.radar.data.OfficialSourceIntegrationTest" time="0.001" />
+  <testcase name="officialUrl_flowsFromRemotePayloadToRoomAndRepository" classname="com.aioffer.radar.data.OfficialUrlEndToEndTest" time="0.037" />
+  <testcase name="subscription_survivesDatabaseReopen" classname="com.aioffer.radar.data.SubscriptionPersistenceTest" time="0.002" />
+  <testcase name="insufficientHistory_showsEvidenceMessageInsteadOfChart" classname="com.aioffer.radar.feature.detail.DetailScreenTest" time="2.02" />
+  <testcase name="yearlyHistory_displaysAccessibleMonthlyEquivalentChart" classname="com.aioffer.radar.feature.detail.DetailScreenTest" time="0.527" />
+  <testcase name="currentOffer_displaysPricesLowestBadgeAndOpensOfficialOffer" classname="com.aioffer.radar.feature.detail.DetailScreenTest" time="0.686" />
+  <testcase name="filters_reportSelectedPlanAndBillingPeriod" classname="com.aioffer.radar.feature.detail.DetailScreenTest" time="0.985" />
+  <testcase name="initialError_displaysRetryState" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.691" />
+  <testcase name="productCard_displaysDetailsAndHandlesSubscription" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.719" />
+  <testcase name="offlineWithCache_displaysWarningAndProducts" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.658" />
+  <testcase name="statisticsAction_reportsNavigationClick" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.671" />
+  <testcase name="realMode_hidesAllDemoControls" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.696" />
+  <testcase name="databaseErrorWithCachedContent_keepsRetryEntryVisible" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.738" />
+  <testcase name="officialModeWithoutAdapter_showsEmptyStateAndSwitchBack" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.516" />
+  <testcase name="home_displaysAppTitleAndDemoWarning" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.52" />
+  <testcase name="subscribeAllAction_reportsClick" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.686" />
+  <testcase name="syncing_displaysProgressState" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.677" />
+  <testcase name="settingsAction_reportsNavigationClick" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.642" />
+  <testcase name="databaseError_showsRecoverableRetryEntry" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.673" />
+  <testcase name="subscribedProduct_showsUnsubscribeAndReportsChange" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.549" />
+  <testcase name="dataSourceStatus_showsLastSuccessfulSyncAndFailureReason" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.641" />
+  <testcase name="deniedNotificationPermission_displaysSettingsState" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.692" />
+  <testcase name="notificationPromptAlreadyShown_isNotShownAgain" classname="com.aioffer.radar.feature.home.HomeScreenTest" time="0.649" />
+  <testcase name="offlineSync_disablesSyncNowAndExplainsWhy" classname="com.aioffer.radar.feature.settings.SettingsScreenTest" time="0.697" />
+  <testcase name="localReadFailure_offersRetryEntry" classname="com.aioffer.radar.feature.settings.SettingsScreenTest" time="0.668" />
+  <testcase name="dataSourceSelection_reportsModeChangesAndShowsBoundaryWarning" classname="com.aioffer.radar.feature.settings.SettingsScreenTest" time="0.731" />
+  <testcase name="notificationDenied_offersPermissionAction" classname="com.aioffer.radar.feature.settings.SettingsScreenTest" time="0.681" />
+  <testcase name="autoSyncToggle_reportsPreferenceChange" classname="com.aioffer.radar.feature.settings.SettingsScreenTest" time="0.728" />
+  <testcase name="syncStatus_showsLastSuccessAndFailureReason" classname="com.aioffer.radar.feature.settings.SettingsScreenTest" time="0.668" />
+  <testcase name="back_reportsNavigation" classname="com.aioffer.radar.feature.settings.SettingsScreenTest" time="0.678" />
+  <testcase name="emptyStatistics_disableClearingAndShowEmptyState" classname="com.aioffer.radar.feature.statistics.StatisticsScreenTest" time="0.507" />
+  <testcase name="clear_requiresConfirmation" classname="com.aioffer.radar.feature.statistics.StatisticsScreenTest" time="0.947" />
+  <testcase name="statistics_displayProductNamesAndCounts" classname="com.aioffer.radar.feature.statistics.StatisticsScreenTest" time="0.496" />
+  <testcase name="rotationAfterHotDeepLink_keepsLatestProductAndBackReturnsHome" classname="com.aioffer.radar.navigation.NotificationDeepLinkTest" time="1.317" />
+  <testcase name="existingActivity_differentProduct_showsNewProductAndBackReturnsHome" classname="com.aioffer.radar.navigation.NotificationDeepLinkTest" time="1.204" />
+  <testcase name="rotationOnDetail_keepsDetailAndBackReturnsHomeOnce" classname="com.aioffer.radar.navigation.NotificationDeepLinkTest" time="1.1" />
+  <testcase name="coldStart_opensRequestedProductAndBackReturnsHome" classname="com.aioffer.radar.navigation.NotificationDeepLinkTest" time="1.066" />
+  <testcase name="rotationAfterBackToHome_doesNotReopenConsumedDeepLink" classname="com.aioffer.radar.navigation.NotificationDeepLinkTest" time="1.143" />
+  <testcase name="existingActivity_sameProduct_reopensDetailAndBackReturnsHome" classname="com.aioffer.radar.navigation.NotificationDeepLinkTest" time="1.025" />
+  <testcase name="multipleHotDeepLinks_backReturnsHomeOnce" classname="com.aioffer.radar.navigation.NotificationDeepLinkTest" time="1.049" />
+  <testcase name="selectedOfficialMode_survivesANewActivityLaunch" classname="com.aioffer.radar.navigation.SettingsNavigationTest" time="1.364" />
+  <testcase name="selectedOfficialMode_survivesRecreateAndBackReturnsHome" classname="com.aioffer.radar.navigation.SettingsNavigationTest" time="1.146" />
+  <testcase name="systemBackFromSettings_returnsHomeWithoutLeavingTheApp" classname="com.aioffer.radar.navigation.SettingsNavigationTest" time="1.065" />
+  <testcase name="settingsEntry_backReturnsHome" classname="com.aioffer.radar.navigation.SettingsNavigationTest" time="0.905" />
+</testsuite>

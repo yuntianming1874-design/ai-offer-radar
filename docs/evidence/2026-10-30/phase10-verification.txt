@@ -1,0 +1,28 @@
+阶段 10 验证记录
+时间：2026-10-30 14:50–14:51（Asia/Shanghai）
+设备：OPD2515，Android 17 / API 37，serial <device-serial>
+
+1) 要求 8 的原始命令（沙箱环境变量后）
+   ./gradlew --offline --no-daemon clean assembleDebug testDebugUnitTest lintDebug
+   结果：BUILD SUCCESSFUL in 58s，55 actionable tasks
+   JVM：21 suites / 127 tests / 0 failures / 0 errors / 0 skipped
+   Lint：0 errors / 2 warnings
+
+2) 要求 9 的设备命令
+   ./gradlew --offline --no-daemon connectedDebugAndroidTest
+   结果：Starting 84 tests on OPD2515 - 17
+         Finished 84 tests on OPD2515 - 17
+         BUILD SUCCESSFUL in 1m 13s
+   计数：84 tests / 0 failures / 0 errors / 0 skipped
+
+3) 安装向导处置
+   ColorOS 在 Gradle 安装 debug APK 时弹出 com.oplus.appdetail InstallGuideActivity。
+   需要点“继续安装”；安装完成后如有 InstallFinishActivity 点“完成”。
+   禁用 com.oplus.appdetail 会退到系统安装器，对无 launcher icon 的 test APK 无法继续，不要禁用。
+   重装后首次启动测试 Activity 还可能弹 AppStartConfirmDialogActivity，选择“30天内允许”。
+
+4) 证据文件
+   phase10-connected-test-results.xml（原始 XML，84 项）
+   phase10-unit-test-results/（21 个 JVM XML）
+   phase10-lint-results-debug.txt
+   phase10-device.txt

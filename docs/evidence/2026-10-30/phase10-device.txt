@@ -1,0 +1,5 @@
+model=OPD2515
+release=17
+sdk=37
+build=OPD2515_17.0.0.103(CN01)
+serial=<device-serial>

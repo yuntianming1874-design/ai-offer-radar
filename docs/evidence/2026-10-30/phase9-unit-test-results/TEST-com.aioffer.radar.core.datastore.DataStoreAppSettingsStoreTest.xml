@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.core.datastore.DataStoreAppSettingsStoreTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-29T17:51:44" hostname="192.168.31.129" time="0.121">
+  <properties/>
+  <testcase name="unknownStoredValues_fallBackWithoutCrashing" classname="com.aioffer.radar.core.datastore.DataStoreAppSettingsStoreTest" time="0.11"/>
+  <testcase name="savedSettings_areReloadedByANewStoreInstance" classname="com.aioffer.radar.core.datastore.DataStoreAppSettingsStoreTest" time="0.009"/>
+  <testcase name="defaults_areSafeWhenNoSettingsWereEverSaved" classname="com.aioffer.radar.core.datastore.DataStoreAppSettingsStoreTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

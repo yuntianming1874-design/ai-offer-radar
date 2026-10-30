@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.data.RemotePayloadNormalizerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-29T17:12:59" hostname="192.168.31.129" time="0.012">
+  <properties/>
+  <testcase name="officialUrl_isPreservedFromRemoteOffer" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.007"/>
+  <testcase name="negativeAmount_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <testcase name="officialSourceWithoutUrl_isRejected" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.002"/>
+  <testcase name="validDemoPayload_normalizesIntoDomainModels" classname="com.aioffer.radar.data.RemotePayloadNormalizerTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
