@@ -66,24 +66,24 @@ adb reverse tcp:8787 tcp:8787
 
 首次使用前：
 
-1. 把仓库推到 GitHub；
+1. 把仓库推到 GitHub（免费账号的 Pages 需仓库为 public）；
 2. 在仓库 **Settings → Pages → Build and deployment** 选择 **GitHub Actions**；
 3. 手动运行一次 `GLM Coding Plan collector` workflow（`workflow_dispatch`）。
 
-发布后的 endpoint 形如：
+当前已部署的 endpoint：
 
 ```text
-https://<owner>.github.io/<repo>/glm-coding-plan.json
+https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
 ```
 
 Android 构建时注入：
 
 ```bash
 ./gradlew assembleDebug \
-  -PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json
+  -PglmCollectorUrl=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
 
 ./gradlew assembleRelease \
-  -PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json
+  -PglmCollectorUrl=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
 ```
 
 - Debug 未传 property 时默认连本机 `127.0.0.1:8787`。

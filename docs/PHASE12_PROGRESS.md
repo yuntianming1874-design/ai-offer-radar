@@ -1,12 +1,13 @@
 # 阶段 12：GLM Coding Plan 官方源纵向切片
 
 更新时间：2026-10-31
-状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）本地验收完成，远程 Pages 待启用**
+状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 首次发布与 JSON 校验**
 范围：第一条真实官方数据源、`QUARTERLY` 计费周期、采集器、Android 适配器、endpoint/CI、测试与证据。
 
 > 2026-10-31 00:53 增强：endpoint 已改为构建时注入（Debug 本机 / Release CI HTTPS），
-> GitHub Actions 定时采集 workflow 已实现并本地校验；JVM 137/137、设备 86/86、Node 10/10。
-> 远程仓库已创建并推送，Pages 尚未启用，workflow 未在真实远端运行。详见文末“阶段 12 增强”。
+> GitHub Actions 定时采集 workflow 已实现并在远端真实运行成功；JVM 137/137、设备 86/86、Node 10/10。
+> 公开仓库已推送，Pages 已启用；快照 `https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json`
+> 已发布并通过 `validate-payload.mjs` 校验（3 products / 9 offers）。详见文末“阶段 12 增强”。
 
 ## 目标与结论
 
@@ -179,14 +180,15 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
   - clean 构建 56s / 84 tasks；JVM **137 / 137（23 suites）**；Lint 0 errors / 2 warnings；
   - 设备 `connectedDebugAndroidTest` **86 / 86**（1m 8s）；
   - Release 无 property / 注入 property 两种构建均成功，BuildConfig 分别为空 / 注入值。
-- 未验证：
-  - 远程仓库已创建并推送，GitHub Pages 未启用，workflow 未在 GitHub 真实运行；
-  - Release 未签名，CI 采集依赖 public 页面选择器与 Chrome 可用性。
+- 远程验收（2026-10-31 15:26–15:27）：
+  - GitHub Actions run 41180172626 重跑成功；checkout/setup-node/setup-chrome/测试/采集/索引/Configure Pages/上传/部署全部通过；
+  - Pages 快照已发布并通过 `validate-payload.mjs`（3 products / 3 plans / 9 offers，fetchedAt 新鲜）；
+  - 未验证：Release 签名、API 26–36/其他 ROM、长期定时运行的稳定性；CI 采集仍依赖公开页面选择器与 Chrome。
 - 证据：`docs/evidence/2026-10-31/phase12-endpoint-ci/`；命令与 CI 配置见 `docs/CI_GLM_COLLECTOR.md`。
 
 ## 已知限制
 
-- Debug 采集器依赖开发机 Chrome；CI/Release 路径已实现；远程仓库已推送，Pages 尚未启用。
+- Debug 采集器依赖开发机 Chrome；CI/Release 路径已实现并已在 GitHub Pages 发布快照。
 - 官方页面改版、CSS 选择器变化、网络/Chrome 故障都会导致采集失败；失败时返回 503，
   App 显示错误，不显示旧价。
 - 只抓个人套餐的公开价格，不抓团队套餐、登录后优惠、优惠券、首月立减。
@@ -198,7 +200,7 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 
 ## 下一步
 
-1. 在已推送的私有仓库启用 GitHub Pages，真实跑通定时采集，并用 `-PglmCollectorUrl` 注入 Release endpoint。
+1. 用已发布的 Pages endpoint 构建 Release，并在手机蜂窝网络下验收官方模式、快照过期拒绝和断网缓存。
 2. 为采集器增加 selector 漂移/抓取失败告警与“上次成功快照”健康检查；保持 provenance。
 3. 再扩展第二个产品，仍按“单产品、单来源、可审计”推进。
 4. 扩大设备矩阵：API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak。

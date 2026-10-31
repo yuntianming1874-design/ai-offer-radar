@@ -1,0 +1,22 @@
+Remote GitHub Actions / Pages deployment
+========================================
+Date: 2026-10-31 15:26-15:27 Asia/Shanghai
+Repository: https://github.com/yuntianming1874-design/ai-offer-radar (public)
+Pages build_type: workflow
+Pages URL: https://yuntianming1874-design.github.io/ai-offer-radar/
+Workflow run: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41180172626
+Run conclusion: success (rerun; first attempt failed at Configure Pages because the repo was private)
+Steps: setup-node, setup-chrome, Node tests, collect, validate, index, configure-pages, upload-pages-artifact, deploy-pages
+
+Endpoint:
+https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
+
+HTTP:
+200, content-type application/json; charset=utf-8, last-modified 2026-10-31T07:26:59Z
+
+Validation:
+node tools/glm-collector/validate-payload.mjs /tmp/glm-pages.json --max-age-seconds 3600
+采集 payload 校验通过：3 档 / 9 个 offer，抓取时间 2026-10-31T07:26:55.096Z
+
+Payload shape:
+3 products / 3 plans / 9 offers; billing periods MONTHLY, QUARTERLY, YEARLY

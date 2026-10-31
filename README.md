@@ -2,7 +2,8 @@
 
 一个本地优先的 Android 演示应用，用于跟踪国内 AI 产品（Kimi、DeepSeek、GLM 等）的订阅价格、优惠和价格历史。
 
-代码仓库：<https://github.com/yuntianming1874-design/ai-offer-radar>（private）。
+代码仓库：<https://github.com/yuntianming1874-design/ai-offer-radar>（public）。
+CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>。
 
 > **当前默认使用内置演示数据，不是实时优惠，也不代表任何官网当前价格。**
 > 演示模式下首页固定展示“演示数据，非实时优惠”。演示价格、折扣和历史均为程序生成的确定性测试数据。
@@ -20,7 +21,7 @@
 | 阶段 10（自动化测试与验收覆盖） | 已完成：127 JVM / 84 设备测试通过（阶段 11 基线） |
 | 阶段 11（设备端到端验收与交付） | 已完成：手工验收 1–8 已在 OPD2515 执行并归档（2026-10-30 22:19–22:32），127 JVM / 84 设备测试 |
 | 阶段 12（GLM Coding Plan 官方源纵向切片） | 已完成：134 JVM / 22 suites；86 / 86 设备测试通过；官方模式真机验收已归档（2026-10-31 00:13） |
-| 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 本地验收完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions workflow 已实现，远程仓库已推送，Pages 待启用 |
+| 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 已完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions + Pages 已启用，远程 workflow 成功发布 3 products / 9 offers |
 
 当前是可构建、可安装、可测试的开发版本，不是生产版本。
 
@@ -33,7 +34,7 @@
 - 设备仪器测试：**86 / 86**（OPD2515 / Android 17 / API 37，1m 8s）
   - 阶段 11 历史设备基线：84 / 84（2026-10-30 22:34）
 - Release endpoint：不传 property 时 `GLM_COLLECTOR_URL=""`（官方模式明确失败关闭）；传 `-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 后 BuildConfig 与 APK 构建均通过
-- CI 定时采集：`.github/workflows/glm-collector.yml` 已实现并在本地校验 YAML/索引生成；**远程仓库已创建并推送；GitHub Pages 尚未启用，workflow 未在远端真实执行**
+- CI 定时采集：`.github/workflows/glm-collector.yml` 已在 GitHub Actions 真实运行成功（[run 41180172626](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41180172626)）；Pages 快照 <https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json> 经 `validate-payload.mjs` 校验通过（3 products / 3 plans / 9 offers）
 - 阶段 12 官方模式真机验收：GLM Lite/Pro/Max × 月/季/年；Lite 年付首页 `¥991.20/年`、折合 `¥82.60`；Lite 季付详情总价 `¥283.20`、折合 `¥94.40`；采集器停止后失败原因与缓存保留；切回演示不混数据
 - 阶段 12 明细：[docs/PHASE12_PROGRESS.md](docs/PHASE12_PROGRESS.md)
 - 阶段 11 手工验收：**已执行**（22:19–22:32），证据见 [docs/PHASE11_DEVICE_ACCEPTANCE.md](docs/PHASE11_DEVICE_ACCEPTANCE.md) 与 `docs/evidence/2026-10-30/phase11/device-manual/`
@@ -353,8 +354,8 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 ## 当前限制
 
 - GLM 官方源优先使用 CI 定时发布的 HTTPS 快照；本地开发仍可依赖本机采集器
-  （Node 24 + Chrome + `adb reverse`）。尚未在真实 GitHub 仓库启用 Pages workflow，
-  远程仓库已创建，但 GitHub Pages 尚未启用，因此“CI 定时采集”目前是已实现、待启用 Pages 的能力。
+  （Node 24 + Chrome + `adb reverse`）。GitHub Pages 已启用，workflow 每 30 分钟采集一次；
+  远程快照超过 2 小时或采集失败时 App 会明确失败并保留缓存。
 - Release 未传 `-PglmCollectorUrl` 时官方 endpoint 为空，官方模式显示未配置；
   这是有意失败关闭，不会请求错误地址。
 - 官方页面是 SPA，选择器改版会导致采集失败；只覆盖公开个人套餐，不覆盖团队套餐、登录优惠、
@@ -365,16 +366,16 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 - FCM 未接入；`NoOpPushNotificationService` 只证明边界存在。
 - WorkManager 周期任务不保证实时；设备休眠/厂商策略会延迟。
 - 通知 `SENT` 表示已提交给系统，不保证用户实际看到；渠道被关闭时事件保持 `PENDING`。
-- 没有 release 签名、应用发布 CI、Play 发布配置；`release` 未开启混淆。GLM 采集 workflow 已实现；远程仓库已创建，Pages 尚未启用。
+- 没有 release 签名、应用发布 CI、Play 发布配置；`release` 未开启混淆。GLM 采集 workflow 已在远端运行；远程 Pages 已发布快照。
 - 深链在“已有 saved state 且系统用全新 intent 重建 Activity”的罕见路径未覆盖。
 - 同一比较分组存在多个优惠时，“当前观测”用同金额最新快照近似；演示数据没有这种组合。
 - Lint 仍有 2 个 warning：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
-- 版本管理：已初始化 git 仓库（`main`）；阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到本地 `main`（标签 `phase12-glm-source`）；阶段 12 增强（endpoint + CI）已提交到 `main`（标签 `phase12-endpoint-ci`），并推送到私有仓库 `https://github.com/yuntianming1874-design/ai-offer-radar`。
+- 版本管理：已初始化 git 仓库（`main`）；阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到 `main`（标签 `phase12-glm-source`）；阶段 12 增强（endpoint + CI）已提交到 `main`（标签 `phase12-endpoint-ci`），并推送到公开仓库 `https://github.com/yuntianming1874-design/ai-offer-radar`。
 
 ## 下一步建议
 
-1. 把仓库推到私有 GitHub，启用 Pages，跑一次 `GLM Coding Plan collector` workflow，
-   然后用 `-PglmCollectorUrl=...` 构建 Debug/Release 验收。
+1. 用已发布的 Pages endpoint（`-PglmCollectorUrl=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json`）
+   构建 Release，并在真机蜂窝网络下验收官方模式；确认 2 小时新鲜度与失败保留缓存。
 2. 扩大设备矩阵：在 API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak 下复跑阶段 11/12 验收。
 3. 发布前：release 签名、应用 CI、WorkManager soak、真实设备长期运行、通知渠道/权限全矩阵。
 4. 交接给下一位开发者时先读 [docs/HANDOFF.md](docs/HANDOFF.md)。

@@ -19,7 +19,16 @@
 | Release（无 endpoint） | `./gradlew --offline --no-daemon assembleRelease` | `BUILD SUCCESSFUL`；`GLM_COLLECTOR_URL=""` |
 | Release（注入 endpoint） | `./gradlew --offline --no-daemon assembleRelease -PglmCollectorUrl=https://example.com/glm-coding-plan.json` | `BUILD SUCCESSFUL`；BuildConfig 注入该 URL |
 | Workflow 语法 | Ruby Psych 解析 `.github/workflows/glm-collector.yml` | 通过；1 job / 9 steps |
-| 远程 CI | GitHub Actions / Pages | **未验证**（远程仓库与 Pages 尚未配置） |
+| 远程 CI | GitHub Actions / Pages | **通过**（2026-10-31 15:27，run 41180172626 重跑成功） |
+| 线上 JSON | `curl https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json` | HTTP 200；3 products / 3 plans / 9 offers；`validate-payload.mjs` 通过 |
+
+## 远程发布
+
+- 仓库已改为 public（免费账号 Pages 不支持 private）；代码与证据已脱敏。
+- Pages 以 `build_type=workflow` 启用；本次为首次成功发布。
+- Workflow：<https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41180172626>
+- 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>
+- 发布后本地校验通过；后续每 30 分钟自动更新，失败时保留上一版快照，客户端 2 小时后拒绝。
 
 ## 关键实现
 
@@ -37,9 +46,10 @@
 - `collector-payload.json`、`payload-validation.txt`
 - `node-tests.txt`、`workflow-check.txt`
 - `release-buildconfig-empty.java` / `release-buildconfig-injected.java`
+- `remote-deployment.txt`：公开仓库 Pages 首次成功发布、run URL、HTTP 200 与线上 JSON 校验
 
 ## 未验证
 
-- GitHub 远程仓库、Pages、定时 schedule 真实执行（无远程仓库）。
+- 定时 `schedule` 的下一次自动触发（本次为手动 workflow_dispatch；页面与发布链路已真实执行）。
 - Release 签名、应用发布 CI。
 - API 26–36、其他 ROM、通知渠道/省电 soak。

@@ -30,13 +30,13 @@ GitHub Actions（每 30 分钟）
 
 ## 首次配置
 
-1. 将仓库推送到 GitHub 私有仓库。
+1. 将仓库推送到 GitHub（免费账号的 Pages 仅对公开仓库开放；本项目已改为 public）。
 2. **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
 3. 手动执行一次 workflow，确认 `Deploy to GitHub Pages` 成功。
 4. endpoint 为：
 
    ```text
-   https://<owner>.github.io/<repo>/glm-coding-plan.json
+   https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
    ```
 
 5. 构建 App 时注入：
@@ -104,12 +104,13 @@ node tools/glm-collector/validate-payload.mjs \
 - 设备：`connectedDebugAndroidTest` **86 / 86**（OPD2515 / API 37，1m 8s）；
 - Release 无 property：`GLM_COLLECTOR_URL=""`；注入 property：BuildConfig 为注入 URL，两次 `assembleRelease` 均通过；
 - workflow YAML 经 Ruby Psych 解析通过（1 job / 9 steps），index 生成脚本本地模拟成功；
-- **未在 GitHub 远端执行**：私有仓库已创建并推送，但 Pages 尚未启用。
+- **已在 GitHub 远端执行**（2026-10-31 15:26–15:27）：run [41180172626](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41180172626) 重跑成功；checkout、Node、Chrome、测试、采集、校验、Configure Pages、上传 artifact、Deploy Pages 全部通过；
+- 线上快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>，HTTP 200，`validate-payload.mjs` 校验 3 products / 3 plans / 9 offers。
 
 ## 已知限制
 
 - GitHub 的 `schedule` 可能延迟；30 分钟是期望值，不是 SLA。
-- GitHub Pages 对私有仓库的可见性取决于仓库/Pages 配置；App 能访问即可。
+- GitHub Pages 需要仓库为 public 或付费计划；免费账号对 private 仓库会返回 “Your current plan does not support GitHub Pages for this repository”。本项目已改为 public，代码与证据已脱敏。
 - 官方页面 CSS 选择器变化会导致采集失败；workflow 会失败并把错误留在 Actions 日志。
 - 只覆盖个人套餐；团队套餐、优惠券、登录价不在本切片内。
 - 采集器需要 Chrome；CI 使用 `browser-actions/setup-chrome`，本地需要安装 Chrome。
