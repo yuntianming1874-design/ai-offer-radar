@@ -16,3 +16,6 @@ captures/
 .install-watcher.pid
 .install-watcher.sh
 .stop-install-watcher
+
+# Release signing keystore (local only)
+.release/
