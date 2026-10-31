@@ -1,0 +1,71 @@
+P2 signed Release — remote verification
+=======================================
+
+Date: 2026-10-31 16:43–16:46 UTC (2026-11-01 00:43–00:46 Asia/Shanghai)
+Repository: https://github.com/yuntianming1874-design/ai-offer-radar (public)
+Commit: 988f709a721c8133090129d43ad9b607d04ad743
+Workflow: release.yml (workflow_dispatch)
+Run: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911
+Result: success; build-release job 1m 59s
+
+Inputs:
+- version_name=1.0.0
+- version_code=1
+- endpoint_url=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
+- sign_release=true
+
+Secrets configured before run (names only):
+- RELEASE_KEYSTORE_BASE64
+- RELEASE_KEYSTORE_PASSWORD
+- RELEASE_KEY_ALIAS
+- RELEASE_KEY_PASSWORD
+
+Workflow steps:
+- Validate inputs: success
+- Check release signing secrets: success
+- Decode release keystore: success
+- Build and test signed release: success (Gradle BUILD SUCCESSFUL in 1m 20s; 77 actionable tasks)
+- Verify endpoint BuildConfig: success
+- Verify APK signature: success
+- Collect artifact and checksum: success
+- Upload release APK: success
+
+Artifact:
+- Name: ai-offer-radar-release
+- File: ai-offer-radar-1.0.0-signed.apk
+- Size: 8,585,258 bytes
+- SHA-256: b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27
+
+Signature verification (downloaded artifact):
+- Verified using v2 scheme (APK Signature Scheme v2): true
+- Signer #1 certificate DN: CN=AI Offer Radar, OU=Mobile, O=AI Offer Radar, L=Shanghai, ST=Shanghai, C=CN
+- Signer #1 certificate SHA-256 digest: 54f6ee32cb7a7d28ed89e5ea131f1e134904b4eeb97dad7b02f238260d19979e
+- Signer #1 key algorithm: RSA
+- Signer #1 key size: 4096 bits
+
+Package metadata:
+- package: com.aioffer.radar
+- versionCode: 1
+- versionName: 1.0.0
+- minSdkVersion: 26
+- targetSdkVersion: 35
+
+Endpoint BuildConfig:
+- GLM_COLLECTOR_URL=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
+- Confirmed in classes2.dex of the downloaded artifact.
+
+Comparison with local signed build:
+- Local APK SHA-256: 376be6952ccb984b72e197646ce1ceb48c16d085b3b4fc905cf82d3c47dbca36
+- CI APK SHA-256: b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27
+- Hashes differ because build outputs are not reproducible; both carry the same certificate (54f6ee32...) and version.
+- Local signed APK was installed on PMX110 / Android 17 and synced official data over HTTPS; the CI artifact was signature-verified after download but not installed because the device disconnected before the install step.
+
+Non-blocking workflow annotations:
+- Node.js 20 deprecation warnings on checkout/setup-java/upload-artifact/setup-gradle.
+- actions/setup-java@v4 deprecation warning.
+- ubuntu-latest migration notice.
+
+Residual risks:
+- Release keystore is local to the maintainer's machine and Keychain; no repository copy.
+- Real stale-snapshot incident still not observed.
+- API 26–36 / other ROMs remain unverified.

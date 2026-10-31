@@ -2,6 +2,7 @@
 
 验证时间：2026-10-31 00:53（Asia/Shanghai）
 P2 远端验证：2026-10-31 23:23–23:30（Asia/Shanghai）
+P2.1 签名 Release：2026-11-01 00:43–00:46（Asia/Shanghai）
 最终设备复跑：2026-10-31 00:52（86 / 86，1m 8s）
 设备：OPD2515 / Android 17 / API 37 / serial `<device-serial>`
 基线：`6f4229a`（tag `phase12-glm-source`）
@@ -54,6 +55,7 @@ P2 远端验证：2026-10-31 23:23–23:30（Asia/Shanghai）
 - `p1-remote-run.txt`：P1 远端首跑 run URL、job 耗时、发布哈希、BuildConfig 与 helper APK SHA-256
 - `p2-alert-drill.txt`：失败阈值演练、Issue #1 创建/去重/恢复关闭、失败 run 置红
 - `p2-release-workflow.txt`：unsigned Release 远端构建、APK 哈希/版本、缺密钥失败关闭
+- `p2-signed-release.txt`：正式签名 Release 远端 run、artifact SHA-256、v2 证书指纹、版本/endpoint 与本地构建对比
 
 ## P1 CI 自证（远端首跑通过，2026-10-31 16:02）
 
@@ -98,7 +100,19 @@ P1 本地证据文件：`p1-node-tests.txt`、`p1-live-verification.txt`、`p1-w
 | `sign_release=false` | [41214833322](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214833322) | 成功 2m22s；artifact `ai-offer-radar-release`；APK `ai-offer-radar-1.0.1-ci-unsigned.apk` 8.0MB，SHA-256 `cf32651a…`；versionCode 2 / versionName 1.0.1-ci；apksigner `DOES NOT VERIFY`（符合 unsigned） |
 | `sign_release=true`，未配置 Secrets | [41215119074](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41215119074) | 22s 失败；逐项报四个 `RELEASE_*` Secret 未配置；未静默产出 unsigned 包 |
 
-正式签名路径仍需用户配置四个 Secrets（keystore 由用户保管）；本仓库不保存密钥。
+正式签名路径已配置四个 Secrets（keystore 由维护者本机保管）；本仓库不保存密钥。
+
+### 正式签名 Release（2026-11-01 00:43–00:46）
+
+| 项目 | Run / 证据 | 结果 |
+|---|---|---|
+| `sign_release=true` | [41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911) | 成功 1m59s；`testDebugUnitTest assembleRelease` 通过（1m20s / 77 tasks）；artifact `ai-offer-radar-release` |
+| 签名 APK | 下载 artifact | `ai-offer-radar-1.0.0-signed.apk`，8,585,258 bytes；SHA-256 `b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27` |
+| 签名验证 | `apksigner verify --print-certs` | v2 通过；证书 SHA-256 `54f6ee32cb7a7d28ed89e5ea131f1e134904b4eeb97dad7b02f238260d19979e`；RSA 4096 |
+| 版本/endpoint | `aapt2 dump badging` + dex strings | versionCode 1 / versionName 1.0.0；BuildConfig 含线上 endpoint |
+| 真机安装 | 本机签名包已安装 PMX110 / API 37 | 官方模式通过 HTTPS 同步成功；CI artifact 下载后仅验签，设备在再次安装前断开 |
+
+结论：正式签名 CI 路径已闭环。CI 与本地 APK 哈希不同但证书一致；不要用哈希不同判断签名不一致。
 
 定时采集观察：最后自动 `schedule` 为 2026-10-31T13:31:47Z（run 41205967508）；此后
 14:01 / 14:31 / 15:01 / 15:31Z 均未出现。23:31 手动触发
@@ -110,5 +124,5 @@ P1 本地证据文件：`p1-node-tests.txt`、`p1-live-verification.txt`、`p1-w
 ## 未验证
 
 - **真实 stale 事故未发生**：告警演练使用手动 1s 阈值；定时 `schedule` 的长期稳定性仍待观察。
-- **正式签名 Release 未构建**：四个签名 Secrets 尚未配置；只验证了 unsigned 与缺密钥失败关闭。
+- **CI 签名 artifact 未再次真机安装**：设备在安装前断开；本机同证书签名包已在 PMX110 安装并完成官方同步。
 - API 26–36、其他 ROM、通知渠道/省电 soak。
