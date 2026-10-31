@@ -22,7 +22,7 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
 | 阶段 11（设备端到端验收与交付） | 已完成：手工验收 1–8 已在 OPD2515 执行并归档（2026-10-30 22:19–22:32），127 JVM / 84 设备测试 |
 | 阶段 12（GLM Coding Plan 官方源纵向切片） | 已完成：134 JVM / 22 suites；86 / 86 设备测试通过；官方模式真机验收已归档（2026-10-31 00:13） |
 | 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 已完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions + Pages 已启用，远程 workflow 成功发布 3 products / 9 offers |
-| 阶段 12 增强 P1（CI 自证端到端） | 已完成远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests；run 41182662449 成功 |
+| 阶段 12 增强 P1（CI 自证端到端） | 已完成远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests；run 41182662449 成功；失败 Issue 路径未注入演练 |
 
 当前是可构建、可安装、可测试的开发版本，不是生产版本。
 
@@ -38,7 +38,7 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
   - 阶段 11 历史设备基线：84 / 84（2026-10-30 22:34）
 - Release endpoint：不传 property 时 `GLM_COLLECTOR_URL=""`（官方模式明确失败关闭）；传 `-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 后 BuildConfig 与 APK 构建均通过
 - CI 定时采集：`.github/workflows/glm-collector.yml` 已在 GitHub Actions 真实运行成功（[run 41180172626](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41180172626)）；Pages 快照 <https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json> 经 `validate-payload.mjs` 校验通过（3 products / 3 plans / 9 offers）
-- CI 自证（P1）：部署后由 `verify-published.mjs` 重拉线上 JSON，HTTP/schema/2h 新鲜度通过且字节 SHA-256 必须等于本次 artifact；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建；失败自动开 Issue，`glm-snapshot-health.yml` 每小时检查 2 小时新鲜度
+- CI 自证（P1）：部署后由 `verify-published.mjs` 重拉线上 JSON，HTTP/schema/2h 新鲜度通过且字节 SHA-256 必须等于本次 artifact；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建；失败自动开 Issue（失败注入未演练），`glm-snapshot-health.yml` 每小时检查 2 小时新鲜度
 - 阶段 12 官方模式真机验收：GLM Lite/Pro/Max × 月/季/年；Lite 年付首页 `¥991.20/年`、折合 `¥82.60`；Lite 季付详情总价 `¥283.20`、折合 `¥94.40`；采集器停止后失败原因与缓存保留；切回演示不混数据
 - 阶段 12 明细：[docs/PHASE12_PROGRESS.md](docs/PHASE12_PROGRESS.md)
 - 阶段 11 手工验收：**已执行**（22:19–22:32），证据见 [docs/PHASE11_DEVICE_ACCEPTANCE.md](docs/PHASE11_DEVICE_ACCEPTANCE.md) 与 `docs/evidence/2026-10-30/phase11/device-manual/`
