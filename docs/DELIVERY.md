@@ -16,7 +16,7 @@
 | 设备自动化测试 | **86 / 86**（2026-10-31 00:52，OPD2515 / API 37，1m 8s）；阶段 11 历史基线 84 / 84 |
 | 采集器/发布校验测试 | **15 / 15**（payload 4 + 校验/CLI 6 + 发布端点校验 5） |
 | P1 CI 自证（部署后哈希、Android job、Issue 告警） | **远端首跑通过**：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)；部署后校验、Android job、恢复关闭、health workflow 成功；P2 已补失败路径演练 |
-| P2 失败告警 + Release workflow | 失败告警演练远端通过（Issue #1 创建/去重/恢复关闭、失败 run 置红）；unsigned 与正式签名 Release 均远端成功（签名 run 41221071911，v2 证书 `54f6ee32…`）；keystore 仅本机/Keychain |
+| P2 失败告警 + Release workflow | 失败告警演练远端通过；unsigned 与正式签名 Release 均远端成功（签名 run 41221071911，v2 证书 `54f6ee32…`）；CI artifact 已真机安装；真实过期快照被守卫拦截并手动恢复；keystore 仅本机/Keychain |
 | Release endpoint | 无 property 时为空（失败关闭）；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时构建成功并正确注入 |
 | CI 定时采集 | **已在 GitHub Actions 真实运行成功**：run 41180172626；Pages 快照 3 products / 9 offers，JSON 校验通过 |
 | 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
@@ -46,9 +46,10 @@
 - **远端首跑（2026-10-31 16:02）**：`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；`glm-snapshot-health` 7s 成功。页面：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>。
 - P2 失败告警演练（远端，2026-10-31 23:23–23:25）：`max_age_seconds=1` 创建 [Issue #1](https://github.com/yuntianming1874-design/ai-offer-radar/issues/1)（run 41214658712）；重复失败去重且 run 置红（run 41214743795）；默认 7200 恢复并关闭 Issue（run 41214800226）。这是手动阈值演练，不是真实 stale 事故。
 - P2 Release workflow（远端）：`sign_release=false` 构建成功（run 41214833322，2m22s，versionCode 2 / 1.0.1-ci，APK SHA-256 `cf32651a…`，unsigned）；`sign_release=true` 缺 Secrets 时 22s 失败关闭（run 41215119074），不会静默产出 unsigned 包。
-- P2 正式签名（远端，2026-11-01 00:43–00:46）：四个 Secrets 配置后 `sign_release=true` 成功（[run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911)，1m59s；Gradle 1m20s / 77 tasks）；`ai-offer-radar-1.0.0-signed.apk` SHA-256 `b08b6208…`，v2 证书 `54f6ee32…`，版本 1 / 1.0.0，endpoint 正确；已下载验签。
-- **未验证**：CI 签名 artifact 未再次真机安装（设备断开）；本机同证书签名包已在 PMX110 安装并完成官方同步；定时 schedule 长期稳定性与真实 stale 事故仍未观察。
-- 下一步：API 26–36 兼容矩阵与 schedule soak；后续发布沿用同一 key、递增 versionCode。
+- P2 正式签名（远端，2026-11-01 00:43–00:46）：四个 Secrets 配置后 `sign_release=true` 成功（[run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911)，1m59s；Gradle 1m20s / 77 tasks）；`ai-offer-radar-1.0.0-signed.apk` SHA-256 `b08b6208…`，v2 证书 `54f6ee32…`，版本 1 / 1.0.0，endpoint 正确。
+- P2 真机与真实 stale（2026-11-01 01:33–01:40）：CI artifact 安装成功，设备内 APK 哈希与 artifact 完全一致；01:36 快照超过 2h，同步显示“采集数据已过期…已超过 120 分钟”，缓存保留、无崩溃；手动触发 [run 41225390770](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41225390770) 刷新后 01:40 同步成功。
+- **未验证/未解决**：GitHub `schedule` 只观察到各一次自动运行，不能提供 30 分钟/小时级 SLA；API 26–36/其他 ROM 未验证。
+- 下一步：外部 cron/heartbeat 兜底 + API 26–36 兼容矩阵；后续发布沿用同一 key、递增 versionCode。
 - 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md) 与 [RELEASE_SIGNING.md](RELEASE_SIGNING.md)。
 
 ## 2. 构建、运行和测试
@@ -363,7 +364,8 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 | GLM 官方源真机采集/同步 | `docs/evidence/2026-10-30/phase12/device-manual/` | 通过（手工 + 86 项自动化） |
 | CI 定时采集/Pages | `.github/workflows/glm-collector.yml` | 通过：run 41180172626；快照 JSON 校验 3 / 9 |
 | FCM / 服务端推送 | 未配置 | **未实现** |
-| 正式签名 Release、应用 CI | `release.yml`；run 41221071911 | 通过（v2 证书 `54f6ee32…`）；CI artifact 未真机安装 |
+| 正式签名 Release、应用 CI | `release.yml`；run 41221071911 | 通过（v2 证书 `54f6ee32…`）；CI artifact 已真机安装，哈希一致 |
+| 采集 schedule 可靠性 | GitHub Actions 自动 schedule | **不足**：仅各一次自动运行；需外部 cron/heartbeat |
 | Play 发布、混淆策略 | 未配置 | **未实现** |
 
 “通过”不等于生产验收：设备测试只证明 OPD2515 / API 37 且自动化覆盖到的路径；阶段 11 手工场景与阶段 12 官方模式真机场景已完成，设备矩阵、真实源生产化与长期稳定性仍需补齐。

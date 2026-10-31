@@ -82,8 +82,9 @@ workflow 会：
   `b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27`；
   v2 签名通过，证书 SHA-256 仍为
   `54f6ee32cb7a7d28ed89e5ea131f1e134904b4eeb97dad7b02f238260d19979e`。
-  CI 与本地 APK 哈希不同但证书一致；CI artifact 下载后验签通过，未再次真机安装
-  （设备在安装前断开），本机同证书签名包已在 PMX110 安装并完成官方同步。
+  CI 与本地 APK 哈希不同但证书一致；CI artifact 已安装到 PMX110，设备内 APK
+  SHA-256 `b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27`
+  与 artifact 完全一致，官方模式同步成功。
 
 ## 4. 本地签名构建
 

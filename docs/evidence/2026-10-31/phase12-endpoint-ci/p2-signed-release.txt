@@ -58,7 +58,8 @@ Comparison with local signed build:
 - Local APK SHA-256: 376be6952ccb984b72e197646ce1ceb48c16d085b3b4fc905cf82d3c47dbca36
 - CI APK SHA-256: b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27
 - Hashes differ because build outputs are not reproducible; both carry the same certificate (54f6ee32...) and version.
-- Local signed APK was installed on PMX110 / Android 17 and synced official data over HTTPS; the CI artifact was signature-verified after download but not installed because the device disconnected before the install step.
+- Local signed APK was installed on PMX110 / Android 17 and synced official data over HTTPS.
+- The CI artifact was installed on PMX110 on 2026-11-01 01:36 after the device reconnected; the installed APK SHA-256 equals the artifact hash (b08b6208...). See p2-ci-install-and-real-stale.txt.
 
 Non-blocking workflow annotations:
 - Node.js 20 deprecation warnings on checkout/setup-java/upload-artifact/setup-gradle.

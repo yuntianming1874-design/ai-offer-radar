@@ -3,6 +3,7 @@
 验证时间：2026-10-31 00:53（Asia/Shanghai）
 P2 远端验证：2026-10-31 23:23–23:30（Asia/Shanghai）
 P2.1 签名 Release：2026-11-01 00:43–00:46（Asia/Shanghai）
+P2.2 CI artifact 真机安装 + 真实过期快照：2026-11-01 01:33–01:40（Asia/Shanghai）
 最终设备复跑：2026-10-31 00:52（86 / 86，1m 8s）
 设备：OPD2515 / Android 17 / API 37 / serial `<device-serial>`
 基线：`6f4229a`（tag `phase12-glm-source`）
@@ -56,6 +57,7 @@ P2.1 签名 Release：2026-11-01 00:43–00:46（Asia/Shanghai）
 - `p2-alert-drill.txt`：失败阈值演练、Issue #1 创建/去重/恢复关闭、失败 run 置红
 - `p2-release-workflow.txt`：unsigned Release 远端构建、APK 哈希/版本、缺密钥失败关闭
 - `p2-signed-release.txt`：正式签名 Release 远端 run、artifact SHA-256、v2 证书指纹、版本/endpoint 与本地构建对比
+- `p2-ci-install-and-real-stale.txt`：CI artifact 真机安装哈希、真实过期快照失败文案、手动刷新恢复、schedule 缺失观察
 
 ## P1 CI 自证（远端首跑通过，2026-10-31 16:02）
 
@@ -110,19 +112,30 @@ P1 本地证据文件：`p1-node-tests.txt`、`p1-live-verification.txt`、`p1-w
 | 签名 APK | 下载 artifact | `ai-offer-radar-1.0.0-signed.apk`，8,585,258 bytes；SHA-256 `b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27` |
 | 签名验证 | `apksigner verify --print-certs` | v2 通过；证书 SHA-256 `54f6ee32cb7a7d28ed89e5ea131f1e134904b4eeb97dad7b02f238260d19979e`；RSA 4096 |
 | 版本/endpoint | `aapt2 dump badging` + dex strings | versionCode 1 / versionName 1.0.0；BuildConfig 含线上 endpoint |
-| 真机安装 | 本机签名包已安装 PMX110 / API 37 | 官方模式通过 HTTPS 同步成功；CI artifact 下载后仅验签，设备在再次安装前断开 |
+| 真机安装 | CI artifact 安装到 PMX110 / API 37 | 安装成功；设备内 APK SHA-256 与 artifact 完全一致；官方模式同步成功 |
 
 结论：正式签名 CI 路径已闭环。CI 与本地 APK 哈希不同但证书一致；不要用哈希不同判断签名不一致。
 
-定时采集观察：最后自动 `schedule` 为 2026-10-31T13:31:47Z（run 41205967508）；此后
-14:01 / 14:31 / 15:01 / 15:31Z 均未出现。23:31 手动触发
-[run 41215240730](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41215240730)
-刷新快照；`schedule` 长期可靠性仍待观察，不把 30 分钟当 SLA。
+### CI artifact 真机安装 + 真实过期事故（2026-11-01 01:33–01:40）
 
-详细记录：`p2-alert-drill.txt`、`p2-release-workflow.txt`。
+| 项目 | 结果 |
+|---|---|
+| CI artifact 安装 | `adb install -r` 成功；设备内 APK SHA-256 `b08b6208…` 与 artifact 完全一致；证书 `54f6ee32…`；versionCode 1 / 1.0.0 |
+| 真实过期快照 | 快照 `fetchedAtEpochMillis=1793460710610`（15:31:50Z）；01:36 同步显示“采集数据已过期…已超过 120 分钟”；缓存仍展示、无崩溃、未冒充实时 |
+| 手动恢复 | [run 41225390770](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41225390770) 36s 成功；新快照 `fetchedAtEpochMillis=1793468246705`（17:37:26Z）；01:40 同步成功并清除失败原因 |
+
+### 定时采集观察
+
+- 最后自动 `schedule` 收集：2026-10-31T13:31:47Z（run 41205967508）。
+- health 自动 `schedule`：仅 2026-10-31T14:32:08Z（run 41210572896）。
+- 16:01 / 16:31 / 17:01 / 17:31Z 收集 schedule 与 15:32 / 16:32 / 17:32Z health schedule 均未出现；workflow 状态为 active，手动 dispatch 正常。
+- 17:36Z 手动触发收集 run 41225390770 恢复快照。
+- 结论：GitHub `schedule` 目前不能提供 30 分钟/小时级 SLA；2 小时客户端新鲜度守卫正确拦截了过期快照，但生产运行需要外部 cron/heartbeat。不要把 GitHub schedule 写成保证。
+
+详细记录：`p2-alert-drill.txt`、`p2-release-workflow.txt`、`p2-ci-install-and-real-stale.txt`。
 
 ## 未验证
 
-- **真实 stale 事故未发生**：告警演练使用手动 1s 阈值；定时 `schedule` 的长期稳定性仍待观察。
-- **CI 签名 artifact 未再次真机安装**：设备在安装前断开；本机同证书签名包已在 PMX110 安装并完成官方同步。
+- **schedule 可靠性未解决**：真实过期事故已发生并被 UI 正确拦截；GitHub schedule 只观察到各一次自动运行，不能作为 SLA。
+- **CI artifact 已真机安装**：安装哈希与 artifact 完全一致；API 26–36/其他 ROM 仍未验证。
 - API 26–36、其他 ROM、通知渠道/省电 soak。

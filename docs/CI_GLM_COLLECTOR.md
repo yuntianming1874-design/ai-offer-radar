@@ -194,8 +194,12 @@ node tools/glm-collector/verify-published.mjs \
 ## 已知限制
 
 - GitHub 的 `schedule` 可能延迟；30 分钟是期望值，不是 SLA。2026-10-31
-  观察到 13:31Z 自动运行后，14:01/14:31/15:01/15:31Z 连续未出现，需手动刷新
-  并继续监控；health workflow 的 2 小时阈值是兜底，不是定时器保证。
+  观察到 13:31Z 自动运行后，14:01/14:31/15:01/15:31Z、16:01/16:31/17:01/17:31Z
+  连续未出现；health workflow 也只在 14:32Z 自动运行一次。
+- 2026-11-01 01:36（Asia/Shanghai）因此发生**真实过期快照**：客户端正确显示
+  “采集数据已过期…已超过 120 分钟”并保留缓存；手动触发 run 41225390770
+  刷新后 01:40 同步恢复。2 小时阈值只是兜底，生产运行需要外部 cron/heartbeat
+  或独立可观测的定时触发，不能把 GitHub schedule 当保证。
 - GitHub Pages 需要仓库为 public 或付费计划；免费账号对 private 仓库会返回
   “Your current plan does not support GitHub Pages for this repository”。
   本项目已改为 public，代码与证据已脱敏。

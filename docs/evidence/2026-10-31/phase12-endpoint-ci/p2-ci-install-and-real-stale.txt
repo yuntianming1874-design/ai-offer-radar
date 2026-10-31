@@ -1,0 +1,39 @@
+P2.2 CI artifact 真机安装 + 真实过期快照事件
+=============================================
+
+Date: 2026-11-01 01:33–01:40 Asia/Shanghai
+Device: PMX110 / Android 17 / API 37 / serial <device-serial>
+Installed package: com.aioffer.radar
+Artifact: ai-offer-radar-1.0.0-signed.apk (run 41221071911)
+
+Install verification:
+- Artifact SHA-256: b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27
+- Installed APK pulled from /data/app; SHA-256 is identical:
+  b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27
+- Certificate SHA-256: 54f6ee32cb7a7d28ed89e5ea131f1e134904b4eeb97dad7b02f238260d19979e
+- versionCode 1 / versionName 1.0.0
+- firstInstallTime 2026-10-31 23:46:11; lastUpdateTime 2026-11-01 01:36:05
+- `adb install -r` succeeded over the local same-key signed package.
+
+Real stale snapshot incident (not a drill):
+- Last successful scheduled collector run: 41205967508 at 2026-10-31 13:31:47Z.
+- Manual refresh: 41215240730 at 15:31:18Z; snapshot fetchedAtEpochMillis=1793460710610
+  (2026-10-31T15:31:50Z).
+- No collector schedule runs at 16:01, 16:31, 17:01, or 17:31Z.
+- At 2026-11-01 01:36 Asia/Shanghai (17:36Z), app sync failed with:
+  “失败原因：采集数据已过期：抓取时间戳 1793460710610，已超过 120 分钟”
+  The cached official products remained visible; no crash and no re-labeling as live data.
+- Manual recovery: run 41225390770 (workflow_dispatch) started 17:36:57Z,
+  collect-and-publish succeeded in 36s; new snapshot fetchedAtEpochMillis=1793468246705
+  (2026-10-31T17:37:26Z), 3 products / 3 plans / 9 offers.
+- App sync at 2026-11-01 01:40 Asia/Shanghai succeeded; “最后成功同步” updated to
+  2026-11-01 01:40, failure reason cleared, official products remained.
+
+Schedule reliability finding:
+- Workflow states are active (`glm-collector` and `glm-snapshot-health`).
+- Only one schedule run each has been observed:
+  collector 13:31:47Z, health 14:32:08Z.
+- Manual dispatches work; scheduled triggers do not currently provide a 30-minute
+  or hourly SLA. The 2-hour client freshness guard correctly caught the stale snapshot,
+  but a production service needs an external scheduler/heartbeat, not GitHub schedule alone.
+- Do not describe GitHub schedule as guaranteed; use manual refresh when operating the demo.

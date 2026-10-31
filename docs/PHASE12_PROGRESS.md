@@ -1,7 +1,7 @@
 # 阶段 12：GLM Coding Plan 官方源纵向切片
 
 更新时间：2026-10-31
-状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 发布与 JSON 校验；P1 CI 自证远端首跑通过；P2 失败告警演练、unsigned 与正式签名 Release workflow 均已远端通过**
+状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 发布与 JSON 校验；P1 CI 自证远端首跑通过；P2 失败告警演练、unsigned 与正式签名 Release workflow、CI artifact 真机安装均已远端/真机通过；真实过期快照已被守卫拦截并手动恢复**
 范围：第一条真实官方数据源、`QUARTERLY` 计费周期、采集器、Android 适配器、endpoint/CI、测试与证据。
 
 > 2026-10-31 00:53 增强：endpoint 已改为构建时注入（Debug 本机 / Release CI HTTPS），
@@ -197,7 +197,7 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 测试：新增 `verify-published.test.mjs` 5 个测试；Node 总数 **15 / 15**。
 - 本地验证（15:48）：线上 `verify-published` 通过；`testDebugUnitTest assembleRelease` 33s / 76 tasks，JVM 137/137；helper APK 签名脚本通过；两个 workflow YAML 解析通过。
 - 远端首跑（16:02）：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449) 成功；`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；[health run 41182665177](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177) 7s 成功。
-- P2 已补失败路径演练：Issue #1 创建、去重、恢复关闭与失败 run 置红；真实 stale 事故未发生。
+- P2 已补失败路径演练：Issue #1 创建、去重、恢复关闭与失败 run 置红；2026-11-01 01:36 已发生真实 stale 事故，客户端正确拦截并在手动刷新后恢复。
 
 ### P2：失败告警演练 + 正式签名 Release（本地 + 远端完成）
 
@@ -207,8 +207,10 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 本地验证：临时 key 签名成功（v2 scheme），无 key 时 `app-release-unsigned.apk` 仍可构建；两个 workflow YAML 解析通过；临时 key 已删除。
 - 远端失败演练：run 41214658712 创建 Issue #1；run 41214743795 去重且 run 置红；run 41214800226 恢复并关闭 Issue。
 - 远端 Release：run 41214833322 unsigned 成功（2m22s，APK SHA-256 `cf32651a…`）；run 41215119074 在缺四个 Secrets 时 22s 失败关闭。
-- 正式签名（2026-11-01 00:43–00:46）：四个 Secrets 配置后 [run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911) 成功（1m59s；Gradle 1m20s / 77 tasks）；artifact `ai-offer-radar-1.0.0-signed.apk` SHA-256 `b08b6208…`，v2 证书 `54f6ee32…`，版本 1 / 1.0.0；已下载验签。
-- **未验证**：CI artifact 未再次真机安装（设备断开）；本机同证书签名包已在 PMX110 安装并完成官方同步；真实 stale 事故与 schedule 长期稳定性未观察。
+- 正式签名（2026-11-01 00:43–00:46）：四个 Secrets 配置后 [run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911) 成功（1m59s；Gradle 1m20s / 77 tasks）；artifact `ai-offer-radar-1.0.0-signed.apk` SHA-256 `b08b6208…`，v2 证书 `54f6ee32…`，版本 1 / 1.0.0。
+- 真机安装（2026-11-01 01:36）：CI artifact 安装成功，设备内 APK SHA-256 与 artifact 完全一致；versionCode 1 / 1.0.0。
+- 真实过期事故（2026-11-01 01:36）：快照 15:31:50Z 超过 2h，同步显示“采集数据已过期…已超过 120 分钟”，缓存保留、无崩溃；手动触发 [run 41225390770](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41225390770) 刷新后 01:40 同步成功。
+- **未解决**：GitHub `schedule` 只观察到各一次自动运行，不能提供 30 分钟/小时级 SLA；API 26–36/其他 ROM 未验证。
 
 ## 已知限制
 
@@ -220,12 +222,12 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 官方套餐页没有匿名价格 API；在拿到正式授权/稳定接口前，不把采集器部署成公共服务。
 - 微博/小红书 robots 对通用爬虫 `Disallow: /`，不做自动抓取；B 站/社媒只能做
   **未验证线索**，不能进入价格库或触发通知。详见 `docs/DATA_SOURCE_INTEGRATION.md`。
-- API 26–36/其他 ROM、通知渠道/省电 soak、FCM 仍未验证或未实现；正式签名 Release 已远端产出并验签，但 CI artifact 未再次真机安装；P2 失败告警注入、去重、恢复关闭已在远端实测，真实 stale 事故与定时 schedule 的长期稳定性仍待观察。
+- API 26–36/其他 ROM、通知渠道/省电 soak、FCM 仍未验证或未实现；正式签名 Release 已远端产出、验签并真机安装；真实过期快照已发生并被 2 小时守卫拦截，但 GitHub schedule 仅各一次自动运行，需外部 cron/heartbeat；P2 失败告警注入、去重、恢复关闭已在远端实测。
 - 2026-10-31 23:31 手动触发 collector 刷新快照；最后一次自动 schedule 为 13:31Z，14:01/14:31/15:01/15:31 未出现，schedule 可靠性需要继续监控。
 
 ## 下一步
 
-1. 做 API 26–36 兼容矩阵与定时 schedule 长期稳定性观察；后续发布沿用同一 signing key、递增 versionCode，并复核 CI artifact 真机安装。
+1. 为采集增加外部 cron/heartbeat，把 GitHub `schedule` 当兜底；再做 API 26–36 兼容矩阵。后续发布沿用同一 signing key、递增 versionCode。
 2. 为采集器增加 selector 漂移回归与更明确的失败摘要（当前已有 workflow 失败/2h 健康 Issue）。
 3. 再扩展第二个产品，仍按“单产品、单来源、可审计”推进。
 4. 扩大设备矩阵：API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak。
