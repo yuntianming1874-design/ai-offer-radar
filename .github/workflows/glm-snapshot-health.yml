@@ -98,6 +98,12 @@ jobs:
               });
             }
 
+      - name: Fail the run after filing the alert
+        if: steps.check.outcome == 'failure'
+        run: |
+          echo "::error::Snapshot freshness check failed; see the stale-snapshot issue."
+          exit 1
+
       - name: Close the stale-snapshot issue after recovery
         if: steps.check.outcome == 'success'
         uses: actions/github-script@v7
