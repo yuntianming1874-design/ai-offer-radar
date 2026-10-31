@@ -43,9 +43,10 @@
 - P1 CI 自证：deploy 后 `verify-published.mjs` 重新拉取线上 JSON，要求 HTTP 200、schema/2h 新鲜度通过且字节 SHA-256 等于 CI 产物；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建并签 helper APK；失败/2h 过期自动开 Issue，恢复后关闭。
 - 本地验证：Node **15/15**；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过；线上 `verify-published` 通过；Android Release job 等价命令 33s / 76 tasks；两个 YAML 解析通过。
 - **远端首跑（2026-10-31 16:02）**：`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；`glm-snapshot-health` 7s 成功。页面：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>。
-- **未验证**：失败建 Issue 的注入演练；定时 schedule 的长期稳定性；正式 release 签名。
-- 下一步：补一次故意失败/恢复告警演练，再进入正式签名/设备矩阵。
-- 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md)。
+- P2 本地：health workflow 支持 `max_age_seconds`（演练用 `1`，生产默认 `7200`）；`release.yml` + Gradle 条件 signingConfig + `docs/RELEASE_SIGNING.md`；临时 key 签名通过 `apksigner`，无 key 时 release 保持 unsigned。
+- **未验证**：失败建 Issue 的远端注入/去重/关闭；P2 签名 workflow 的远端运行；正式 release keystore；定时 schedule 的长期稳定性。
+- 下一步：先跑 health 失败演练，再跑 `release.yml` 的 `sign_release=false`，最后配置正式 keystore。
+- 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md) 与 [RELEASE_SIGNING.md](RELEASE_SIGNING.md)。
 
 ## 2. 构建、运行和测试
 

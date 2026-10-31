@@ -56,6 +56,10 @@ GitHub Actions（每 30 分钟）
   Pages 一直返回旧文件，健康检查会以 2 小时为阈值失败。
 - 失败时开/更新 Issue `GLM snapshot is stale (>2h)`；恢复后自动关闭。
 - 这样即使“最后一次成功超过 2 小时”而没有新的失败 run，也会被发现。
+- 手动演练：`workflow_dispatch` 可传 `max_age_seconds=1`，在不等待两小时的情况下
+  触发失败路径，确认 Issue 创建、1 小时内去重；随后用默认 `7200` 重跑，确认
+  Issue 被评论并关闭。演练 run 与 Issue 链接要写入 evidence，不能把“健康运行”
+  当作失败告警已测试。
 
 ## 为什么需要线上字节哈希
 
@@ -90,6 +94,14 @@ GitHub Actions（每 30 分钟）
    ```
 
    Debug 构建可继续使用本机默认地址；也可以用同一个 property 指向远端。
+
+## Release 签名包
+
+`.github/workflows/release.yml` 是手动触发的签名发布骨架：`version_name` /
+`version_code` / `endpoint_url` / `sign_release` 四个输入；签名 key 只从仓库
+Secrets 读取，未配置时明确失败，不会静默产出未签名包。完整步骤、keystore
+生成、密码保管、`sign_release=false` 的链路验证和安装注意事项见
+[RELEASE_SIGNING.md](RELEASE_SIGNING.md)。
 
 ## 为什么 Release 默认空 endpoint
 

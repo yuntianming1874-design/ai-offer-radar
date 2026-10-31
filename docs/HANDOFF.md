@@ -1,7 +1,7 @@
 # AI 优惠雷达：开发者交接文档
 
 更新时间：2026-10-31
-交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源，86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成；随后补充了 **endpoint 构建时配置 + GitHub Actions 定时采集**（公开仓库已推送，Pages 已启用，workflow 已真实运行成功）；P1 又加入了**部署后线上字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警**，并已在 GitHub Actions 远端首跑成功（[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)）。
+交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源，86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成；随后补充了 **endpoint 构建时配置 + GitHub Actions 定时采集**（公开仓库已推送，Pages 已启用，workflow 已真实运行成功）；P1 又加入了**部署后线上字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警**，并已在 GitHub Actions 远端首跑成功（[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)）。P2 已落地 health 失败演练入口与 `release.yml` 签名骨架，正式 keystore 和远端演练待完成。
 
 ## 一句话状态
 
@@ -25,6 +25,8 @@
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
 | 采集器/发布校验测试 | 15 / 15（4 payload + 6 校验/CLI + 5 发布端点校验） |
 | P1 CI 自证 | 远端首跑通过：部署后 HTTP/2h/SHA-256、Android build job、恢复关闭 job、health workflow；**失败建 Issue 路径未注入演练** |
+| P2 失败告警演练 | health workflow 已支持手动 `max_age_seconds`；本地 stale 校验失败、默认阈值通过；**远端 Issue 创建/去重/关闭待演练** |
+| P2 Release 签名骨架 | `release.yml` + Gradle 条件 signingConfig + `RELEASE_SIGNING.md`；本地用临时 key 签名并通过 apksigner，未配置 key 时保持 unsigned；**正式 keystore/远端签名构建待配置** |
 | Release endpoint | 无 property 时 `GLM_COLLECTOR_URL=""`；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时 BuildConfig 正确注入，`assembleRelease` 通过 |
 | 阶段 8/9/10/11 证据 | `docs/evidence/2026-10-30/` |
 | 阶段 12 证据 | `docs/evidence/2026-10-30/phase12/` |
@@ -215,6 +217,29 @@
 - **失败建 Issue 路径未注入演练**：当前只验证了健康运行的恢复关闭路径；不要写成“失败告警已实测”。
 - 限制：`build-android` 的 APK 是 CI 临时 key 签名的 helper，不是正式 release 签名；Issue 告警依赖 `issues: write` 与仓库 Issue 功能；工作流不会发邮件/Slack。
 
+### 阶段 12 增强 P2：失败告警演练 + Release 签名骨架
+
+- `.github/workflows/glm-snapshot-health.yml` 新增 `workflow_dispatch` 输入
+  `max_age_seconds`，默认 `7200`；手动传 `1` 可在不等待两小时的情况下触发 stale
+  路径。`MAX_AGE_SECONDS` 会进入校验命令和 Issue body；失败仍用固定标题
+  `GLM snapshot is stale (>2h)` 去重，恢复后评论并关闭。
+- `.github/workflows/release.yml`：手动触发，输入 `version_name`、`version_code`、
+  `endpoint_url`、`sign_release`。`sign_release=true` 时解码
+  `RELEASE_KEYSTORE_BASE64` 到 runner 临时目录，Set up JDK 17/Gradle，执行
+  `testDebugUnitTest assembleRelease`，用 `apksigner verify` 校验，输出 SHA-256
+  并上传 artifact；缺任一 secret 时在构建前失败。
+- `app/build.gradle.kts`：从 `RELEASE_KEYSTORE_PATH`/`RELEASE_KEYSTORE_PASSWORD`/
+  `RELEASE_KEY_ALIAS`/`RELEASE_KEY_PASSWORD` 读取签名信息；四项齐全才创建
+  `signingConfigs.release` 并绑定 release buildType，否则保持 unsigned。支持
+  `-PreleaseVersionCode` / `-PreleaseVersionName`。
+- `docs/RELEASE_SIGNING.md`：keystore 生成、四个 GitHub Secrets、触发命令、本地
+  签名、apksigner/安装、版本纪律和密钥丢失/泄露处理。
+- 本地验证：临时 key 签名 `assembleRelease` 成功，`apksigner` 显示 v2 签名；
+  无环境变量时 clean release 仍为 `app-release-unsigned.apk`（apksigner
+  `DOES NOT VERIFY`）；临时 key 已删除，未入库。
+- **未完成**：正式 keystore 尚未配置，`release.yml` 尚未远端运行；失败 Issue
+  演练尚未在远端执行。不要把本地签名验证写成“正式发布包已就绪”。
+
 
 ## 代码地图
 
@@ -245,6 +270,7 @@ app/src/main/java/com/aioffer/radar/
 tools/glm-collector/               GLM 官方套餐页本机/CI 渲染采集器（Node + Chrome CDP）+ payload/发布校验
 .github/workflows/glm-collector.yml 定时采集、校验、发布并自证线上字节
 .github/workflows/glm-snapshot-health.yml 每小时检查线上快照 2 小时新鲜度
+.github/workflows/release.yml         手动签名 Release APK（密钥来自 Secrets）
 app/src/androidTest/assets/        真实采集 JSON fixture
 ```
 
@@ -328,17 +354,18 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 6. **通知权限/渠道边界**：拒绝或渠道关闭时事件保留 PENDING；恢复后补发；没有长期 soak。
 7. **深链罕见路径**：已有 saved state 且系统用全新 intent 重建 Activity 时，启动 intent 会被跳过；常规冷启动/热启动/旋转已覆盖。
 8. **历史最低近似**：同组多优惠同价时用“同金额最新快照”近似当前观测；演示数据不覆盖该组合。
-9. **发布能力缺失**：没有 release 签名、应用发布 CI、Play 配置、混淆策略；`release` 未开启 minify。GLM 采集 workflow 已在 GitHub 远端执行成功，Pages 每 30 分钟更新快照。P1 的 `build-android` 用一次性 CI key 签 helper APK，不是正式发布签名；P1 的部署后哈希、Android job、恢复关闭 job 与 health workflow 已在远端首跑通过，失败建 Issue 的注入路径仍未演练。
+9. **发布能力未闭环**：`release.yml` + 条件 signingConfig 骨架已落地，但正式 release keystore 尚未配置，未产出可分发签名包；没有 Play 配置、混淆策略，`release` 未开启 minify。P1 的 `build-android` 用一次性 CI key 签 helper APK，不是正式发布签名；P1 失败建 Issue 的注入路径与 P2 签名 workflow 远端运行仍未演练。
 10. **Lint 仍有 2 个 warning**：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
 11. **版本管理**：已初始化 git 仓库（`main`），阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到本地 `main`（标签 `phase12-glm-source`）；远程仓库为 `https://github.com/yuntianming1874-design/ai-offer-radar`（public，已脱敏），`main` 与 `phase11-accepted`、`phase12-glm-source`、`phase12-endpoint-ci` 三个标签均已推送。阶段 12 增强（endpoint + CI）已提交到 `main`；后续请新建 commit/分支，不要覆盖既有基线标签。
 12. **文档历史**：`PHASE6_PROGRESS.md` 和旧版 `PHASE8_PROGRESS.md` 曾出现不可复核的完成声明；以根 README、阶段 8–12 文档和 evidence XML 为准。阶段 11 手工项与“仅自动化覆盖/未验证”项必须分开，不得混写成全部通过；阶段 12 的 86 项设备测试已完成并归档，引用时以 `phase12-connected-test-results.xml` 为准；阶段 12 增强引用 `evidence/2026-10-31/README.md`。
 
 ## 建议的下一步
 
-1. **补 P1 失败告警演练，转入 P2**
-   - P1 健康路径已远端通过（run 41182662449 / health 41182665177）；下一步故意制造一次采集/健康检查失败，确认 Issue 创建、1 小时去重和恢复关闭。
+1. **完成 P2 远端演练与正式签名**
+   - health workflow 用 `max_age_seconds=1` 触发失败，确认 Issue 创建、1 小时去重；再用默认 `7200` 恢复关闭。
+   - 先用 `release.yml` 的 `sign_release=false` 验证构建链路；配置四个 release secrets 后构建签名包，记录 run URL、版本、SHA-256。
    - 观察几次定时 `schedule` 是否按 30 分钟运行；GitHub 可能延迟，客户端 2 小时阈值会兜底。
-   - 正式 release 签名、应用发布 CI、设备矩阵仍属 P2，不要用 CI helper APK 冒充正式包。
+   - 不要用 CI helper APK 冒充正式发布包；密钥丢失/泄露处理见 `RELEASE_SIGNING.md`。
 
 2. **扩大设备矩阵与长期 soak**
    - 在 API 26–36、其他 ROM、通知渠道关闭、厂商省电策略和长期运行下复跑 `docs/PHASE11_DEVICE_ACCEPTANCE.md` 的 1–8，并复跑阶段 12 官方模式。
@@ -364,7 +391,10 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 - [x] `connectedDebugAndroidTest` 通过（2026-10-31：86 / 86，OPD2515 / API 37，1m 8s）
 - [x] `node --test tools/glm-collector/test/*.test.mjs` 通过（15 / 15）
 - [x] P1 本地：线上 `verify-published` 通过；Android Release job 等价命令通过；两个 workflow YAML 解析
-- [ ] P1 远端：手动触发后 `collect-and-publish` / `build-android` / 告警 job 与 `glm-snapshot-health` 真实通过
+- [x] P1 远端：`collect-and-publish` / `build-android` / `glm-snapshot-health` 真实通过（2026-10-31 16:02）
+- [ ] P1 失败 Issue 注入演练（health `max_age_seconds=1`）
+- [x] P2 本地：临时 key 签名通过 apksigner；无 key 时 release 保持 unsigned；两个 workflow YAML 解析
+- [ ] P2 远端：`release.yml` 的 unsigned/signed 运行与正式 keystore 配置
 - [x] Release 空 endpoint 构建通过，BuildConfig 为空；注入 `-PglmCollectorUrl` 后 BuildConfig 正确
 - [x] GitHub Pages/定时 workflow 真实执行（2026-10-31 15:27，run 41180172626 成功；快照 3 products / 9 offers）
 - [x] 首装首页有“演示数据，非实时优惠”，状态卡显示“数据来源：演示数据”

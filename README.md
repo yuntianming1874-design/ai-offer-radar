@@ -23,6 +23,7 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
 | 阶段 12（GLM Coding Plan 官方源纵向切片） | 已完成：134 JVM / 22 suites；86 / 86 设备测试通过；官方模式真机验收已归档（2026-10-31 00:13） |
 | 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 已完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions + Pages 已启用，远程 workflow 成功发布 3 products / 9 offers |
 | 阶段 12 增强 P1（CI 自证端到端） | 已完成远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests；run 41182662449 成功；失败 Issue 路径未注入演练 |
+| P2（失败告警演练 + Release 签名骨架） | 进行中：health workflow 支持手动阈值、`release.yml` + 条件 signingConfig 已落地；正式 keystore 未配置，远端演练/签名构建待验证 |
 
 当前是可构建、可安装、可测试的开发版本，不是生产版本。
 
@@ -374,8 +375,8 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 - FCM 未接入；`NoOpPushNotificationService` 只证明边界存在。
 - WorkManager 周期任务不保证实时；设备休眠/厂商策略会延迟。
 - 通知 `SENT` 表示已提交给系统，不保证用户实际看到；渠道被关闭时事件保持 `PENDING`。
-- 没有 release 签名、应用发布 CI、Play 发布配置；`release` 未开启混淆。GLM 采集 workflow 已在远端运行；远程 Pages 已发布快照。P1 新增的 `build-android` 产物是用 CI 临时 key 签名的 helper APK，不是正式发布包。
-- P1 的部署后哈希校验、Android job 与 Issue 告警已在本地验证；远端首次运行记录待补充（见 `docs/evidence/2026-10-31/`）。
+- Release 签名/发布 CI 骨架已就绪（`.github/workflows/release.yml` + 条件 signingConfig），但正式 keystore 尚未配置，没有产出可分发签名包；`build-android` 产物仍是 CI 临时 key 签名的 helper APK。Play 发布配置、混淆策略仍未实现。
+- P1 的部署后哈希校验、Android job 与健康路径已在远端通过；失败 Issue 路径和 P2 签名 workflow 仍待远端演练（见 `docs/evidence/2026-10-31/`）。
 - 深链在“已有 saved state 且系统用全新 intent 重建 Activity”的罕见路径未覆盖。
 - 同一比较分组存在多个优惠时，“当前观测”用同金额最新快照近似；演示数据没有这种组合。
 - Lint 仍有 2 个 warning：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
@@ -383,9 +384,9 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 
 ## 下一步建议
 
-1. 观察 P1 远端首跑：确认部署后哈希校验、Android Release job、失败/2h 过期 Issue 告警都按预期工作；再决定是否把 `build-android` 改成正式签名。
+1. 完成 P2 远端演练：用 `max_age_seconds=1` 触发 health 失败并确认 Issue 去重/关闭；用 `sign_release=false` 先验证 `release.yml`，再配置正式 keystore 构建签名包。
 2. 扩大设备矩阵：在 API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak 下复跑阶段 11/12 验收。
-3. 发布前：release 签名、应用 CI、WorkManager soak、真实设备长期运行、通知渠道/权限全矩阵。
+3. 发布前：正式签名、Play 配置、WorkManager soak、真实设备长期运行、通知渠道/权限全矩阵。
 4. 交接给下一位开发者时先读 [docs/HANDOFF.md](docs/HANDOFF.md)。
 
 ## 开发文档
@@ -393,6 +394,7 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 - [交付说明](docs/DELIVERY.md)
 - [交接文档](docs/HANDOFF.md)
 - [CI 定时采集与远程 endpoint](docs/CI_GLM_COLLECTOR.md)
+- [Release 签名与 CI 发布包](docs/RELEASE_SIGNING.md)
 - [阶段 12：GLM 官方源](docs/PHASE12_PROGRESS.md)
 - [GLM 采集器](tools/glm-collector/README.md)
 - [阶段 11 设备验收清单](docs/PHASE11_DEVICE_ACCEPTANCE.md)

@@ -6,6 +6,12 @@ on:
     # this hourly check notices that the published snapshot is older than 2h.
     - cron: "15 * * * *"
   workflow_dispatch:
+    inputs:
+      max_age_seconds:
+        description: "Freshness threshold in seconds; use 1 to drill the failure path"
+        required: false
+        default: "7200"
+        type: string
 
 permissions:
   contents: read
@@ -19,6 +25,10 @@ jobs:
   check-freshness:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # Manual runs can lower the threshold to exercise the stale path without
+      # waiting two hours. Scheduled runs always use the production 7200s value.
+      MAX_AGE_SECONDS: ${{ github.event.inputs.max_age_seconds || '7200' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -28,7 +38,13 @@ jobs:
         with:
           node-version: 24
 
-      - name: Verify the published snapshot is not older than 2 hours
+      - name: Validate the freshness threshold
+        run: |
+          case "$MAX_AGE_SECONDS" in
+            ''|*[!0-9]*) echo "::error::max_age_seconds must be a non-negative integer"; exit 2 ;;
+          esac
+
+      - name: Verify the published snapshot freshness
         id: check
         continue-on-error: true
         env:
@@ -36,7 +52,7 @@ jobs:
         run: |
           test -n "$ENDPOINT_URL"
           node tools/glm-collector/verify-published.mjs "$ENDPOINT_URL" \
-            --max-age-seconds 7200 \
+            --max-age-seconds "$MAX_AGE_SECONDS" \
             --attempts 3 \
             --delay-ms 5000
 
@@ -47,11 +63,14 @@ jobs:
           script: |
             const title = "GLM snapshot is stale (>2h)";
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const threshold = process.env.MAX_AGE_SECONDS;
             const body = [
-              `The published GLM snapshot failed the 2-hour freshness check: ${runUrl}`,
+              `The published GLM snapshot failed the ${threshold}s freshness check: ${runUrl}`,
               "",
               "Endpoint: https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json",
-              "Likely causes: the collector workflow failed, GitHub Actions scheduled runs stopped, or Pages serves an old artifact."
+              "Likely causes: the collector workflow failed, GitHub Actions scheduled runs stopped, or Pages serves an old artifact.",
+              "",
+              `Configured threshold: ${threshold}s.`
             ].join("\n");
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -98,7 +117,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: existing.number,
-                body: `Recovered: the snapshot passed the 2-hour check at ${runUrl}`
+                body: `Recovered: the snapshot passed the configured freshness check at ${runUrl}`
               });
               await github.rest.issues.update({
                 owner: context.repo.owner,

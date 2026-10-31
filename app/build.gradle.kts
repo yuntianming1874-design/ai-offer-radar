@@ -13,6 +13,30 @@ val glmCollectorUrl: String = providers.gradleProperty("glmCollectorUrl")
     ?.trim()
     .orEmpty()
 
+val releaseVersionCode: Int = providers.gradleProperty("releaseVersionCode")
+    .orNull
+    ?.let { value -> requireNotNull(value.toIntOrNull()) { "releaseVersionCode must be an integer" } }
+    ?: 1
+val releaseVersionName: String = providers.gradleProperty("releaseVersionName")
+    .orNull
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+    ?: "1.0"
+
+// The release key is supplied by the repository owner through CI secrets. It is
+// never committed. When any value is absent the release build stays unsigned so
+// local and PR builds keep working.
+val releaseKeystorePath: String = System.getenv("RELEASE_KEYSTORE_PATH").orEmpty()
+val releaseKeystorePassword: String = System.getenv("RELEASE_KEYSTORE_PASSWORD").orEmpty()
+val releaseKeyAlias: String = System.getenv("RELEASE_KEY_ALIAS").orEmpty()
+val releaseKeyPassword: String = System.getenv("RELEASE_KEY_PASSWORD").orEmpty()
+val hasReleaseSigning: Boolean = listOf(
+    releaseKeystorePath,
+    releaseKeystorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { it.isNotBlank() }
+
 fun String.asBuildConfigString(): String =
     "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
@@ -24,11 +48,22 @@ android {
         applicationId = "com.aioffer.radar"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = releaseVersionCode
+        versionName = releaseVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -41,6 +76,7 @@ android {
             )
         }
         release {
+            signingConfig = signingConfigs.findByName("release")
             buildConfigField(
                 "String",
                 "GLM_COLLECTOR_URL",

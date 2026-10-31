@@ -199,6 +199,14 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 远端首跑（16:02）：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449) 成功；`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；[health run 41182665177](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177) 7s 成功。
 - **未完成**：失败建 Issue 的注入路径未演练；`notify-failure` 在健康运行中按预期跳过，不能写成“失败告警已实测”。
 
+### P2：失败告警演练 + Release 签名骨架（本地完成）
+
+- `glm-snapshot-health.yml` 新增 `workflow_dispatch` 输入 `max_age_seconds`，默认 `7200`；手动传 `1` 触发 stale 路径，Issue body 记录实际阈值；恢复后关闭。
+- `release.yml`：手动输入 version/endpoint/sign 开关；从四个 Secrets 解码 keystore；JDK 17 + Gradle；跑 `testDebugUnitTest assembleRelease`；`apksigner verify`；输出 SHA-256 与 artifact。
+- `app/build.gradle.kts`：四个 `RELEASE_*` 环境变量齐全才创建 release signingConfig，否则 unsigned；支持 `-PreleaseVersionCode` / `-PreleaseVersionName`。
+- 本地验证：临时 key 签名成功（v2 scheme），无 key 时 `app-release-unsigned.apk` 仍可构建；两个 workflow YAML 解析通过；临时 key 已删除。
+- **未完成**：远端 failure drill、`release.yml` 首跑、正式 keystore 配置；不能写成“失败告警已实测”或“正式签名包已产出”。
+
 ## 已知限制
 
 - Debug 采集器依赖开发机 Chrome；CI/Release 路径已实现并已在 GitHub Pages 发布快照。
