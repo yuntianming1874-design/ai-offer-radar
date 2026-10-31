@@ -22,17 +22,18 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
 | 阶段 11（设备端到端验收与交付） | 已完成：手工验收 1–8 已在 OPD2515 执行并归档（2026-10-30 22:19–22:32），127 JVM / 84 设备测试 |
 | 阶段 12（GLM Coding Plan 官方源纵向切片） | 已完成：134 JVM / 22 suites；86 / 86 设备测试通过；官方模式真机验收已归档（2026-10-31 00:13） |
 | 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 已完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions + Pages 已启用，远程 workflow 成功发布 3 products / 9 offers |
-| 阶段 12 增强 P1（CI 自证端到端） | 已实现，待远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests |
+| 阶段 12 增强 P1（CI 自证端到端） | 已完成远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests；run 41182662449 成功 |
 
 当前是可构建、可安装、可测试的开发版本，不是生产版本。
 
-最近一次验证（2026-10-31 15:48，阶段 12 增强 P1 本地验证；远端首跑待执行）：
+最近一次验证（2026-10-31 16:02，阶段 12 增强 P1 本地 + 远端首跑）：
 
 - `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest`：`BUILD SUCCESSFUL`，56s，84 tasks
 - JVM 单元测试：**137 / 137**（23 suites）
 - Lint：**0 errors，2 warnings**（既有 API 标记与未使用颜色）
 - 采集器/发布校验测试：**15 / 15**（4 个 payload + 6 个校验/CLI + 5 个发布端点校验）；本机采集器实测 3 products / 3 plans / 9 offers
-- P1 本地验证：`testDebugUnitTest assembleRelease` 33s / 76 tasks；线上 `verify-published.mjs` 通过（3 档 / 9 offers，SHA-256 `5e7aebdc528862abdd2dfc6341f10cd1d7da3276b680efb6c17a1feff3a5ac03`）；helper APK 签名脚本本地模拟通过；两个 workflow YAML 解析通过；**尚未在 GitHub 远端执行 P1 工作流**
+- P1 本地验证：`testDebugUnitTest assembleRelease` 33s / 76 tasks；线上 `verify-published.mjs` 通过；helper APK 签名脚本本地模拟通过；两个 workflow YAML 解析通过
+- P1 远端首跑（[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)）：`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s，Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK SHA-256 `8783870e…`；`close-recovered-issue` 成功；`notify-failure` 健康时跳过；[health run 41182665177](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177) 7s 成功
 - 设备仪器测试：**86 / 86**（OPD2515 / Android 17 / API 37，1m 8s）
   - 阶段 11 历史设备基线：84 / 84（2026-10-30 22:34）
 - Release endpoint：不传 property 时 `GLM_COLLECTOR_URL=""`（官方模式明确失败关闭）；传 `-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 后 BuildConfig 与 APK 构建均通过

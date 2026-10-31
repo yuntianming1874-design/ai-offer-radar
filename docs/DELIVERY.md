@@ -15,7 +15,7 @@
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
 | 设备自动化测试 | **86 / 86**（2026-10-31 00:52，OPD2515 / API 37，1m 8s）；阶段 11 历史基线 84 / 84 |
 | 采集器/发布校验测试 | **15 / 15**（payload 4 + 校验/CLI 6 + 发布端点校验 5） |
-| P1 CI 自证（部署后哈希、Android job、Issue 告警） | **本地通过**：线上 `verify-published`、Android 等价构建、签名脚本、两个 YAML；**远端首跑待执行** |
+| P1 CI 自证（部署后哈希、Android job、Issue 告警） | **远端首跑通过**：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)；部署后校验、Android job、恢复关闭、health workflow 成功；失败建 Issue 未注入演练 |
 | Release endpoint | 无 property 时为空（失败关闭）；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时构建成功并正确注入 |
 | CI 定时采集 | **已在 GitHub Actions 真实运行成功**：run 41180172626；Pages 快照 3 products / 9 offers，JSON 校验通过 |
 | 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
@@ -41,9 +41,10 @@
 - 新鲜度：`GlmCodingPlanRemoteDataSource` 拒绝超过 2 小时的快照，也拒绝晚于当前时间 5 分钟的时间戳；endpoint 为空时不发起网络。
 - CI：`.github/workflows/glm-collector.yml` 每 30 分钟运行，Node 24 + Chrome，采集后 `validate-payload.mjs` 校验，发布到 GitHub Pages；校验失败不发布。
 - P1 CI 自证：deploy 后 `verify-published.mjs` 重新拉取线上 JSON，要求 HTTP 200、schema/2h 新鲜度通过且字节 SHA-256 等于 CI 产物；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建并签 helper APK；失败/2h 过期自动开 Issue，恢复后关闭。
-- 本地验证：Node **15/15**；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过；线上 `verify-published` 通过（SHA-256 `5e7aebdc…`）；Android Release job 等价命令 33s / 76 tasks；两个 YAML 解析通过。
-- **已启用**：公开远程仓库已推送；Pages 已启用；workflow 重跑成功（run 41180172626），快照 `https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json` 已发布并通过 `validate-payload.mjs` 校验。
-- 下一步：推送 P1 并手动触发 workflow，确认部署后哈希、Android job、Issue 告警与 `glm-snapshot-health` 的真实结果；再进入正式签名/设备矩阵。
+- 本地验证：Node **15/15**；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过；线上 `verify-published` 通过；Android Release job 等价命令 33s / 76 tasks；两个 YAML 解析通过。
+- **远端首跑（2026-10-31 16:02）**：`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；`glm-snapshot-health` 7s 成功。页面：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>。
+- **未验证**：失败建 Issue 的注入演练；定时 schedule 的长期稳定性；正式 release 签名。
+- 下一步：补一次故意失败/恢复告警演练，再进入正式签名/设备矩阵。
 - 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md)。
 
 ## 2. 构建、运行和测试

@@ -1,0 +1,28 @@
+P1 remote first run — 2026-10-31 (Asia/Shanghai)
+Repository: https://github.com/yuntianming1874-design/ai-offer-radar
+Commit: 65b515d
+
+Collector workflow
+- Run: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449
+- Trigger: workflow_dispatch
+- collect-and-publish: success, 34s (all 13 steps)
+- Verify the deployed bytes and freshness:
+  发布端点校验通过：第 1 次尝试，3 档 / 9 个 offer，
+  payload SHA-256 3357c7cd569f09da846cc22aed40586ef0718b5ad75d2d9b3e1bec09bde1282d
+- build-android: success, 3m 4s
+  - Gradle: BUILD SUCCESSFUL in 2m 29s
+  - BuildConfig: GLM_COLLECTOR_URL = "https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json"
+  - helper APK: app-release-ci-signed.apk
+    SHA-256 8783870e15fbc3ad41c67cffd203b3001c0dc755e2bff8e0c3506523d2af66e5
+  - artifact: ai-offer-radar-release-ci
+- close-recovered-issue: success, 3s (no open failure issue to close)
+- notify-failure: skipped (healthy run)
+
+Snapshot health workflow
+- Run: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177
+- check-freshness: success, 7s
+- stale issue handling: no open issue; close step successful
+
+Notes
+- Node 20 deprecation warnings only; all jobs passed.
+- Failure-issue creation path was not injected/failed in this run; only the healthy and recovered-close paths were exercised.

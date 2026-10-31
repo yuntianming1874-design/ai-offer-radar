@@ -165,8 +165,13 @@ node tools/glm-collector/verify-published.mjs \
   重跑成功，checkout、Node、Chrome、测试、采集、校验、Configure Pages、
   上传 artifact、Deploy Pages 全部通过；线上快照 HTTP 200，
   `validate-payload.mjs` 校验 3 products / 3 plans / 9 offers。
-- P1（部署后哈希校验 + Android build job + Issue 告警）的远端首跑记录见
-  `docs/evidence/2026-10-31/phase12-endpoint-ci/`。
+- 2026-10-31 16:02：P1 首跑 [run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)
+  成功。`collect-and-publish` 34s，部署后 `verify-published` 第 1 次通过
+  （3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s，
+  `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK
+  `8783870e…`；`close-recovered-issue` 成功，`notify-failure` 健康时跳过。
+  `glm-snapshot-health` [run 41182665177](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177)
+  7s 成功。失败建 Issue 的注入路径尚未演练。
 
 ## 已知限制
 

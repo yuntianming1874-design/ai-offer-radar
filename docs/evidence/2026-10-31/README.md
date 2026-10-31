@@ -50,6 +50,19 @@
 - `p1-node-tests.txt`：P1 后 Node 15 / 15
 - `p1-live-verification.txt`：线上 JSON 发布校验（3 档 / 9 offers、SHA-256）
 - `p1-workflow-check.txt`：两个 workflow 的 job 结构
+- `p1-remote-run.txt`：P1 远端首跑 run URL、job 耗时、发布哈希、BuildConfig 与 helper APK SHA-256
+
+## P1 CI 自证（远端首跑通过，2026-10-31 16:02）
+
+| 项目 | 证据 | 结果 |
+|---|---|---|
+| `collect-and-publish` | [run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449) | 成功，34s；部署后 `verify-published` 第 1 次通过，3 档 / 9 offers，SHA-256 `3357c7cd…` |
+| `build-android` | 同一 run | 成功，3m 4s；Gradle `BUILD SUCCESSFUL in 2m 29s`；BuildConfig 含线上 URL；helper APK `8783870e…` |
+| `close-recovered-issue` | 同一 run | 成功；无遗留失败 Issue |
+| `notify-failure` | 同一 run | 跳过（健康运行） |
+| 快照健康检查 | [run 41182665177](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177) | `check-freshness` 成功，7s |
+
+详细记录：`p1-remote-run.txt`。
 
 ## P1 CI 自证（本地验证，2026-10-31 15:48）
 
@@ -65,7 +78,7 @@ P1 本地证据文件：`p1-node-tests.txt`、`p1-live-verification.txt`、`p1-w
 
 ## 未验证
 
-- **P1 远端首跑**：部署后哈希校验、Android job、Issue 创建/关闭、`glm-snapshot-health` 尚未在 GitHub 实际执行。
+- **失败告警注入未执行**：P1 远端健康运行已验证部署后哈希、Android job、恢复关闭 job 与 health workflow；`notify-failure` 的失败建 Issue 路径尚未通过故意失败演练。
 - 定时 `schedule` 的下一次自动触发（此前为手动 workflow_dispatch；页面与发布链路已真实执行）。
 - Release 签名、应用发布 CI。
 - API 26–36、其他 ROM、通知渠道/省电 soak。
