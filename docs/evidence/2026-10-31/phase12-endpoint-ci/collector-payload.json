@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "id": "glm-coding-plan-official",
+    "sourceType": "OFFICIAL_WEB",
+    "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+    "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+    "fetchedAtEpochMillis": 1793378768815
+  },
+  "products": [
+    {
+      "id": "glm-coding-plan-official-lite",
+      "name": "GLM Coding Plan Lite",
+      "logoUrl": null,
+      "isDemo": false
+    },
+    {
+      "id": "glm-coding-plan-official-pro",
+      "name": "GLM Coding Plan Pro",
+      "logoUrl": null,
+      "isDemo": false
+    },
+    {
+      "id": "glm-coding-plan-official-max",
+      "name": "GLM Coding Plan Max",
+      "logoUrl": null,
+      "isDemo": false
+    }
+  ],
+  "plans": [
+    {
+      "id": "glm-coding-plan-official-lite",
+      "productId": "glm-coding-plan-official-lite",
+      "name": "Lite",
+      "planType": "STANDARD"
+    },
+    {
+      "id": "glm-coding-plan-official-pro",
+      "productId": "glm-coding-plan-official-pro",
+      "name": "Pro",
+      "planType": "STANDARD"
+    },
+    {
+      "id": "glm-coding-plan-official-max",
+      "productId": "glm-coding-plan-official-max",
+      "name": "Max",
+      "planType": "STANDARD"
+    }
+  ],
+  "offers": [
+    {
+      "id": "glm-coding-plan-official-lite-monthly",
+      "productId": "glm-coding-plan-official-lite",
+      "planId": "glm-coding-plan-official-lite",
+      "planType": "STANDARD",
+      "offerType": "NONE",
+      "title": "GLM Coding Plan Lite 连续包月",
+      "discountDescription": "连续包月：¥118/月（原价 ¥118/月），折合 ¥118/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "MONTHLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 11800,
+      "actualAmountMinor": 11800,
+      "monthlyEquivalentMinor": 11800,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-pro-monthly",
+      "productId": "glm-coding-plan-official-pro",
+      "planId": "glm-coding-plan-official-pro",
+      "planType": "STANDARD",
+      "offerType": "NONE",
+      "title": "GLM Coding Plan Pro 连续包月",
+      "discountDescription": "连续包月：¥538/月（原价 ¥538/月），折合 ¥538/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "MONTHLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 53800,
+      "actualAmountMinor": 53800,
+      "monthlyEquivalentMinor": 53800,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-max-monthly",
+      "productId": "glm-coding-plan-official-max",
+      "planId": "glm-coding-plan-official-max",
+      "planType": "STANDARD",
+      "offerType": "NONE",
+      "title": "GLM Coding Plan Max 连续包月",
+      "discountDescription": "连续包月：¥1078/月（原价 ¥1078/月），折合 ¥1078/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "MONTHLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 107800,
+      "actualAmountMinor": 107800,
+      "monthlyEquivalentMinor": 107800,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-lite-quarterly",
+      "productId": "glm-coding-plan-official-lite",
+      "planId": "glm-coding-plan-official-lite",
+      "planType": "STANDARD",
+      "offerType": "PROMOTION",
+      "title": "GLM Coding Plan Lite 连续包季 8折",
+      "discountDescription": "连续包季 8折：¥94.4/月（原价 ¥118/月），折合 ¥94.40/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "QUARTERLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 35400,
+      "actualAmountMinor": 28320,
+      "monthlyEquivalentMinor": 9440,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-pro-quarterly",
+      "productId": "glm-coding-plan-official-pro",
+      "planId": "glm-coding-plan-official-pro",
+      "planType": "STANDARD",
+      "offerType": "PROMOTION",
+      "title": "GLM Coding Plan Pro 连续包季 8折",
+      "discountDescription": "连续包季 8折：¥430.4/月（原价 ¥538/月），折合 ¥430.40/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "QUARTERLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 161400,
+      "actualAmountMinor": 129120,
+      "monthlyEquivalentMinor": 43040,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-max-quarterly",
+      "productId": "glm-coding-plan-official-max",
+      "planId": "glm-coding-plan-official-max",
+      "planType": "STANDARD",
+      "offerType": "PROMOTION",
+      "title": "GLM Coding Plan Max 连续包季 8折",
+      "discountDescription": "连续包季 8折：¥862.4/月（原价 ¥1078/月），折合 ¥862.40/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "QUARTERLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 323400,
+      "actualAmountMinor": 258720,
+      "monthlyEquivalentMinor": 86240,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-lite-yearly",
+      "productId": "glm-coding-plan-official-lite",
+      "planId": "glm-coding-plan-official-lite",
+      "planType": "STANDARD",
+      "offerType": "PROMOTION",
+      "title": "GLM Coding Plan Lite 连续包年",
+      "discountDescription": "连续包年：¥82.6/月（原价 ¥118/月），折合 ¥82.60/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "YEARLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 141600,
+      "actualAmountMinor": 99120,
+      "monthlyEquivalentMinor": 8260,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-pro-yearly",
+      "productId": "glm-coding-plan-official-pro",
+      "planId": "glm-coding-plan-official-pro",
+      "planType": "STANDARD",
+      "offerType": "PROMOTION",
+      "title": "GLM Coding Plan Pro 连续包年",
+      "discountDescription": "连续包年：¥376.6/月（原价 ¥538/月），折合 ¥376.60/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "YEARLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 645600,
+      "actualAmountMinor": 451920,
+      "monthlyEquivalentMinor": 37660,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    },
+    {
+      "id": "glm-coding-plan-official-max-yearly",
+      "productId": "glm-coding-plan-official-max",
+      "planId": "glm-coding-plan-official-max",
+      "planType": "STANDARD",
+      "offerType": "PROMOTION",
+      "title": "GLM Coding Plan Max 连续包年",
+      "discountDescription": "连续包年：¥754.6/月（原价 ¥1078/月），折合 ¥754.60/月",
+      "regionCode": "CN",
+      "currencyCode": "CNY",
+      "billingPeriod": "YEARLY",
+      "taxIncluded": true,
+      "originalAmountMinor": 1293600,
+      "actualAmountMinor": 905520,
+      "monthlyEquivalentMinor": 75460,
+      "startsAtEpochMillis": 1793378768815,
+      "endsAtEpochMillis": null,
+      "updatedAtEpochMillis": 1793378768815,
+      "source": {
+        "id": "glm-coding-plan-official",
+        "sourceType": "OFFICIAL_WEB",
+        "sourceUrl": "https://www.bigmodel.cn/glm-coding",
+        "titleOrSummary": "GLM Coding Plan 官方套餐页；抓取文本：Lite 连续包月 ¥118/月（原价 ¥118/月）；Pro 连续包月 ¥538/月（原价 ¥538/月）；Max 连续包月 ¥1078/月（原价 ¥1078/月）；Lite 连续包季 8折 ¥94.4/月（原价 ¥118/月）；Pro 连续包季 8折 ¥430.4/月（原价 ¥538/月）；Max 连续包季 8折 ¥862.4/月（原价 ¥1078/月）；Lite 连续包年 ¥82.6/月（原价 ¥118/月）；Pro 连续包年 ¥376.6/月（原价 ¥538/月）；Max 连续包年 ¥754.6/月（原价 ¥1078/月）",
+        "fetchedAtEpochMillis": 1793378768815
+      },
+      "officialUrl": "https://www.bigmodel.cn/glm-coding"
+    }
+  ]
+}

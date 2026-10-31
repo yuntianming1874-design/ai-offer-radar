@@ -1,8 +1,12 @@
 # 阶段 12：GLM Coding Plan 官方源纵向切片
 
 更新时间：2026-10-31
-状态：**已完成；官方模式真机验收与 86 / 86 设备测试通过**
-范围：第一条真实官方数据源、`QUARTERLY` 计费周期、采集器、Android 适配器、测试与证据。
+状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）本地验收完成，远程 Pages 待启用**
+范围：第一条真实官方数据源、`QUARTERLY` 计费周期、采集器、Android 适配器、endpoint/CI、测试与证据。
+
+> 2026-10-31 00:53 增强：endpoint 已改为构建时注入（Debug 本机 / Release CI HTTPS），
+> GitHub Actions 定时采集 workflow 已实现并本地校验；JVM 137/137、设备 86/86、Node 10/10。
+> 远程仓库与 Pages 尚未配置，workflow 未在真实远端运行。详见文末“阶段 12 增强”。
 
 ## 目标与结论
 
@@ -150,9 +154,39 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
    证明模式切换不混数据。
 8. `connectedDebugAndroidTest`：86 / 86 通过。
 
+## 阶段 12 增强：endpoint 配置化 + CI 定时采集（2026-10-31 00:53）
+
+目标：把官方源从“开发机本机服务”升级为可定时发布的远程 JSON 管道，同时保留 Debug 本地开发路径。
+
+- endpoint：
+  - `BuildConfig.GLM_COLLECTOR_URL` 构建时注入；
+  - Debug 缺省 `http://127.0.0.1:8787/v1/glm-coding-plan`；
+  - Release 未传 `-PglmCollectorUrl` 时为空，官方模式明确“未配置”，失败关闭；
+  - 示例：`./gradlew assembleRelease -PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json`。
+- 客户端新鲜度：
+  - `GlmCodingPlanRemoteDataSource` 校验 `fetchedAt`，超过 **2 小时**拒绝；
+  - 晚于当前时间超过 5 分钟拒绝；
+  - endpoint 为空时不发网络请求，直接给出可操作错误。
+- CI：
+  - `.github/workflows/glm-collector.yml`，每 30 分钟 + 手动触发；
+  - Node 24 + Chrome headless 采集，`validate-payload.mjs` 校验 3×3=9、来源、金额、新鲜度；
+  - 发布 `glm-coding-plan.json` + 最小 index 到 GitHub Pages；
+  - 采集/校验失败时 job 失败，不发布半成品。
+- 本地验证：
+  - `tools/glm-collector/validate.mjs` / `validate-payload.mjs`，Node 测试 10/10；
+  - 真实采集一次：3 tabs / 9 offers / 12s，payload 校验通过；
+  - workflow YAML 经 Ruby Psych 解析通过，index 生成脚本本地模拟成功（3 products / 9 offers）；
+  - clean 构建 56s / 84 tasks；JVM **137 / 137（23 suites）**；Lint 0 errors / 2 warnings；
+  - 设备 `connectedDebugAndroidTest` **86 / 86**（1m 8s）；
+  - Release 无 property / 注入 property 两种构建均成功，BuildConfig 分别为空 / 注入值。
+- 未验证：
+  - 远程仓库与 GitHub Pages 未配置，workflow 未在 GitHub 真实运行；
+  - Release 未签名，CI 采集依赖 public 页面选择器与 Chrome 可用性。
+- 证据：`docs/evidence/2026-10-31/phase12-endpoint-ci/`；命令与 CI 配置见 `docs/CI_GLM_COLLECTOR.md`。
+
 ## 已知限制
 
-- 采集器必须运行在开发机，且需要本机 Chrome；这不是生产数据服务。
+- Debug 采集器依赖开发机 Chrome；CI/Release 路径已实现但尚未启用远程仓库/Pages。
 - 官方页面改版、CSS 选择器变化、网络/Chrome 故障都会导致采集失败；失败时返回 503，
   App 显示错误，不显示旧价。
 - 只抓个人套餐的公开价格，不抓团队套餐、登录后优惠、优惠券、首月立减。
@@ -164,7 +198,7 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 
 ## 下一步
 
-1. 用正式来源（官方开放 API 或授权页面）替换本机采集器；Android 适配器接口保持不变。
-2. 增加官方来源健康检查与“上次抓取原文”展示；保持 provenance。
+1. 配置私有远程仓库与 GitHub Pages，真实跑通定时采集，并用 `-PglmCollectorUrl` 注入 Release endpoint。
+2. 为采集器增加 selector 漂移/抓取失败告警与“上次成功快照”健康检查；保持 provenance。
 3. 再扩展第二个产品，仍按“单产品、单来源、可审计”推进。
 4. 扩大设备矩阵：API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak。

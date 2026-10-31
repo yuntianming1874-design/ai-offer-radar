@@ -21,6 +21,8 @@ import kotlinx.serialization.json.longOrNull
 const val GLM_CODING_PLAN_SOURCE_ID = "glm-coding-plan-official"
 const val DEFAULT_GLM_COLLECTOR_ENDPOINT =
     "http://127.0.0.1:8787/v1/glm-coding-plan"
+const val MAX_SOURCE_AGE_MILLIS = 2L * 60L * 60L * 1000L
+private const val MAX_FUTURE_SKEW_MILLIS = 5L * 60L * 1000L
 
 /**
  * Reads the GLM Coding Plan official-page snapshot produced by
@@ -31,11 +33,18 @@ const val DEFAULT_GLM_COLLECTOR_ENDPOINT =
 class GlmCodingPlanRemoteDataSource(
     private val endpoint: String = DEFAULT_GLM_COLLECTOR_ENDPOINT,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val nowEpochMillis: () -> Long = System::currentTimeMillis,
+    private val maxSourceAgeMillis: Long = MAX_SOURCE_AGE_MILLIS,
     private val httpGet: suspend (String) -> String = { url -> httpGetDefault(url) }
 ) : RemoteDataSource {
     override val sourceId: String = GLM_CODING_PLAN_SOURCE_ID
 
     override suspend fun fetch(): RemoteSyncPayload = withContext(ioDispatcher) {
+        if (endpoint.isBlank()) {
+            throw RemoteDataSourceException(
+                "未配置 GLM 官方采集地址：请通过 -PglmCollectorUrl 或 CI 发布地址构建应用"
+            )
+        }
         val body = try {
             httpGet(endpoint)
         } catch (error: RemoteDataSourceException) {
@@ -75,6 +84,16 @@ class GlmCodingPlanRemoteDataSource(
         }
         if (source.fetchedAtEpochMillis <= 0L) {
             invalid("官方来源必须提供有效的抓取时间")
+        }
+        val ageMillis = nowEpochMillis() - source.fetchedAtEpochMillis
+        if (ageMillis > maxSourceAgeMillis) {
+            invalid(
+                "采集数据已过期：抓取时间戳 ${source.fetchedAtEpochMillis}，" +
+                    "已超过 ${maxSourceAgeMillis / 60_000} 分钟"
+            )
+        }
+        if (ageMillis < -MAX_FUTURE_SKEW_MILLIS) {
+            invalid("采集数据抓取时间异常：晚于当前时间")
         }
         val products = root.requiredArray("products").map { parseProduct(it.jsonObject) }
         val plans = root.requiredArray("plans").map { parsePlan(it.jsonObject) }

@@ -1,0 +1,87 @@
+name: GLM Coding Plan collector
+
+on:
+  schedule:
+    # Refresh the published snapshot every 30 minutes. GitHub may delay
+    # scheduled runs, so the Android client rejects snapshots older than 2h.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: glm-coding-plan-collector
+  cancel-in-progress: true
+
+jobs:
+  collect-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Set up Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Test collector and payload validation
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
+        run: |
+          node --test tools/glm-collector/test/*.test.mjs
+
+      - name: Collect official snapshot
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
+        timeout-minutes: 8
+        run: |
+          mkdir -p public
+          node tools/glm-collector/collector.mjs --once > public/glm-coding-plan.json
+          node tools/glm-collector/validate-payload.mjs \
+            public/glm-coding-plan.json \
+            --max-age-seconds 1800
+
+      - name: Add a minimal index
+        run: |
+          node --input-type=module -e '
+            import { readFileSync, writeFileSync } from "node:fs";
+            const payload = JSON.parse(readFileSync("public/glm-coding-plan.json", "utf8"));
+            const collectedAt = new Date(payload.source.fetchedAtEpochMillis).toISOString();
+            const offers = payload.offers.length;
+            const products = payload.products.length;
+            const html = `<!doctype html>
+            <html lang="zh-CN"><meta charset="utf-8">
+            <title>GLM Coding Plan official snapshot</title>
+            <body>
+            <h1>GLM Coding Plan official snapshot</h1>
+            <p>Source: <a href="${payload.source.sourceUrl}">${payload.source.sourceUrl}</a></p>
+            <p>Collected at: <time datetime="${collectedAt}">${collectedAt}</time></p>
+            <p>${products} products, ${offers} offers.</p>
+            <p><a href="glm-coding-plan.json">glm-coding-plan.json</a></p>
+            </body></html>`;
+            writeFileSync("public/index.html", html);
+          '
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

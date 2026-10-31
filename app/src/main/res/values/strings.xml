@@ -112,7 +112,7 @@
     <string name="settings_data_source_official_configured_desc">来自 GLM Coding Plan 官方套餐页，经本机渲染采集器抓取</string>
     <string name="settings_data_source_switch_note">切换只改变展示范围，不会改写已保存记录的可信度标识。演示记录永远不会被标记为官方历史。</string>
     <string name="settings_official_not_configured">官方数据源适配器尚未配置：当前不会产生或缓存官方实时数据。可随时切回演示数据查看演示内容。</string>
-    <string name="settings_official_collector_hint">官方源需要先在电脑启动 GLM 采集器，并执行 adb reverse tcp:8787 tcp:8787；随后在首页点“同步”。采集失败时首页会保留缓存并显示失败原因。</string>
+    <string name="settings_official_collector_hint">官方模式通过构建时注入的 endpoint 读取 GLM 官方快照。Debug 本机调试需先在电脑启动 GLM 采集器并执行 adb reverse tcp:8787 tcp:8787；Release 使用 CI 发布的 HTTPS JSON。采集失败时首页会保留缓存并显示失败原因。</string>
     <string name="settings_last_sync">同步状态</string>
     <string name="settings_last_successful_sync">最后成功同步：%1$s</string>
     <string name="settings_no_successful_sync">尚无成功同步记录</string>

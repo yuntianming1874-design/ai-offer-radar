@@ -20,12 +20,14 @@ https://www.bigmodel.cn/glm-coding
 ```
 
 该页面是 Vue SPA，价格只在浏览器执行 JavaScript 后出现。当前实现不是让 Android
-直接抓页面，而是由开发机上的**本机渲染采集器**读取页面，再把同构 JSON 给 App：
+直接抓页面，而是由渲染采集器读取页面，再把同构 JSON 给 App：
 
 ```text
 Android OFFICIAL 模式
-  -> http://127.0.0.1:8787/v1/glm-coding-plan
-  -> tools/glm-collector（Node.js + headless Chrome）
+  -> BuildConfig.GLM_COLLECTOR_URL
+     - Debug: http://127.0.0.1:8787/v1/glm-coding-plan (adb reverse)
+     - Release: https://<owner>.github.io/<repo>/glm-coding-plan.json
+  -> tools/glm-collector（Node.js + headless Chrome，本机或 GitHub Actions）
   -> https://www.bigmodel.cn/glm-coding
 ```
 
@@ -35,17 +37,19 @@ Android OFFICIAL 模式
 - 数据：Lite / Pro / Max × 月/季/年 = 9 个 offer
 - 季/年 `actualAmountMinor` 是总价；`monthlyEquivalentMinor` 是折合月价
 - 采集失败返回 503，**不回退旧价**
-- 仅本地监听；设备通过 `adb reverse tcp:8787 tcp:8787` 访问
+- Debug 仅本机监听，设备通过 `adb reverse tcp:8787 tcp:8787` 访问
+- Release/CI 使用 HTTPS 静态快照，endpoint 由 `-PglmCollectorUrl` 注入；未注入时失败关闭
+- App 拒绝抓取时间超过 **2 小时**的快照，也拒绝晚于当前时间 5 分钟的时间戳
 
 采集器运行、JSON 契约和已知限制见
-[`tools/glm-collector/README.md`](../tools/glm-collector/README.md)。
+[`tools/glm-collector/README.md`](../tools/glm-collector/README.md)；
+CI 与 Pages 配置见 [`CI_GLM_COLLECTOR.md`](CI_GLM_COLLECTOR.md)。
 
 ### 这不是生产数据服务
 
-采集器依赖开发机、Chrome 和 USB/adb；它不是后端，不具备 SLA、鉴权、横向扩展或公网
-访问能力。在拿到官方开放 API 或书面授权前，不要把它部署成公共服务，也不要让 release
-包依赖一个不可达的本机地址。当前保留这个纵向切片，是为了证明“来源可追溯、价格可同步、
-历史可追加”的完整链路。
+Debug 路径依赖开发机、Chrome 和 USB/adb；CI/Pages 路径是定时静态快照，仍不是具备
+SLA、鉴权、横向扩展的后端。在拿到官方开放 API 或书面授权前，不要把它部署成公共服务。
+当前保留这个纵向切片，是为了证明“来源可追溯、价格可同步、历史可追加”的完整链路。
 
 ## 适配器必须提供什么
 
@@ -102,8 +106,9 @@ Android OFFICIAL 模式
 - 首页 `DataSourceStatusCard` 永远显示当前模式的数据来源、最后成功同步时间和失败原因。
 - 离线或同步失败但有缓存时，文案固定包含“数据可能已过期”，不会说“实时”。
 - 演示模式始终显示“演示数据，非实时优惠”横幅。
-- 官方模式显示“官方数据”和采集器/同步状态；采集器未启动、`adb reverse` 断开或
-  返回错误时，显示真实失败原因和“切回演示数据”入口，不回退旧价。
+- 官方模式显示“官方数据”和采集器/同步状态；endpoint 未配置、Debug 采集器未启动、
+  `adb reverse` 断开、CI 快照过期或返回错误时，显示真实失败原因和“切回演示数据”入口，
+  不回退旧价。
 - `lastSuccessfulSyncAt` 只在成功同步时前进；失败同步保留上一次成功时间，并单独展示失败原因。
 - 首页选折合月价最低的 offer 展示总价；详情页按周期分别展示总价和月均。季/年付不能直接
   和月付总价比较。

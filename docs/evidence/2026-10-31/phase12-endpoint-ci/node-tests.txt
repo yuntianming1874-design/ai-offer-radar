@@ -1,0 +1,18 @@
+✔ parses yuan text into minor units without floating point drift (1.934667ms)
+✔ builds three products, three plans and nine official offers (1.104291ms)
+✔ rejects a partial or out-of-order tab set (0.918833ms)
+✔ rejects missing tiers, missing prices and impossible discounts (0.264458ms)
+✔ accepts a fresh, complete official payload (3.117375ms)
+✔ rejects a payload older than the freshness window (3.267834ms)
+✔ rejects a payload fetched in the future (0.225958ms)
+✔ rejects an incomplete or duplicated offer set (0.213542ms)
+✔ rejects missing provenance or cross-source offers (0.180333ms)
+✔ CLI fails closed on stale data and accepts fresh data (62.402708ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 117.571333

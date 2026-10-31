@@ -15,6 +15,7 @@ class GlmCodingPlanRemoteDataSourceTest {
         var requestedEndpoint: String? = null
         val dataSource = GlmCodingPlanRemoteDataSource(
             endpoint = "http://collector.test/v1/glm-coding-plan",
+            nowEpochMillis = { FIXED_NOW },
             httpGet = { endpoint ->
                 requestedEndpoint = endpoint
                 validPayload
@@ -45,8 +46,43 @@ class GlmCodingPlanRemoteDataSourceTest {
     }
 
     @Test
+    fun blankEndpoint_failsBeforeRequestingTheNetwork() = runBlocking {
+        var requestedEndpoint: String? = null
+        val dataSource = GlmCodingPlanRemoteDataSource(
+            endpoint = "   ",
+            httpGet = { endpoint ->
+                requestedEndpoint = endpoint
+                validPayload
+            }
+        )
+
+        val error = assertThrows(RemoteDataSourceException::class.java) {
+            runBlocking { dataSource.fetch() }
+        }
+
+        assertTrue(error.message.orEmpty().contains("未配置 GLM 官方采集地址"))
+        assertNull(requestedEndpoint)
+    }
+
+    @Test
+    fun stalePayload_isRejected() {
+        val dataSource = GlmCodingPlanRemoteDataSource(
+            endpoint = "http://collector.test/v1/glm-coding-plan",
+            nowEpochMillis = { FIXED_NOW + MAX_SOURCE_AGE_MILLIS + 1L },
+            httpGet = { validPayload }
+        )
+
+        val error = assertThrows(RemoteDataSourceException::class.java) {
+            runBlocking { dataSource.fetch() }
+        }
+
+        assertTrue(error.message.orEmpty().contains("采集数据已过期"))
+    }
+
+    @Test
     fun unreachableCollector_reportsActionableError() {
         val dataSource = GlmCodingPlanRemoteDataSource(
+            nowEpochMillis = { FIXED_NOW },
             httpGet = { throw IOException("Connection refused") }
         )
 
@@ -61,6 +97,7 @@ class GlmCodingPlanRemoteDataSourceTest {
     @Test
     fun mismatchedSourceId_isRejected() {
         val dataSource = GlmCodingPlanRemoteDataSource(
+            nowEpochMillis = { FIXED_NOW },
             httpGet = {
                 validPayload.replace(
                     "\"id\": \"$GLM_CODING_PLAN_SOURCE_ID\"",
@@ -79,6 +116,7 @@ class GlmCodingPlanRemoteDataSourceTest {
     @Test
     fun officialSourceWithoutUrl_isRejected() {
         val dataSource = GlmCodingPlanRemoteDataSource(
+            nowEpochMillis = { FIXED_NOW },
             httpGet = { validPayload.replace("\"https://www.bigmodel.cn/glm-coding\"", "null") }
         )
 
@@ -92,6 +130,7 @@ class GlmCodingPlanRemoteDataSourceTest {
     @Test
     fun unsupportedSchemaVersion_isRejected() {
         val dataSource = GlmCodingPlanRemoteDataSource(
+            nowEpochMillis = { FIXED_NOW },
             httpGet = { validPayload.replace("\"schemaVersion\": 1", "\"schemaVersion\": 2") }
         )
 
@@ -114,6 +153,8 @@ class GlmCodingPlanRemoteDataSourceTest {
     }
 
     private companion object {
+        const val FIXED_NOW = 1_790_000_000_000L
+
         val validPayload = """
             {
               "schemaVersion": 1,

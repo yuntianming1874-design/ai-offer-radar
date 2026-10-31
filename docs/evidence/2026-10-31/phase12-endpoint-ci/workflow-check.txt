@@ -1,0 +1,3 @@
+workflow=GLM Coding Plan collector
+jobs=collect-and-publish
+collect-and-publish: steps=9

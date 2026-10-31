@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.data.SettingsAwareSyncServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-30T16:51:55" hostname="192.168.31.129" time="0.007">
+  <properties/>
+  <testcase name="modeIsReadOnEverySync_notCapturedAtConstruction" classname="com.aioffer.radar.data.SettingsAwareSyncServiceTest" time="0.004"/>
+  <testcase name="officialMode_usesOnlyTheOfficialSyncService" classname="com.aioffer.radar.data.SettingsAwareSyncServiceTest" time="0.001"/>
+  <testcase name="demoMode_usesOnlyTheDemoSyncService" classname="com.aioffer.radar.data.SettingsAwareSyncServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.BuildConfigTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-30T16:51:54" hostname="192.168.31.129" time="0.012">
+  <properties/>
+  <testcase name="debugBuild_hasCollectorEndpointConfigured" classname="com.aioffer.radar.BuildConfigTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

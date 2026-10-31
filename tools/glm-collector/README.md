@@ -50,8 +50,63 @@ adb reverse tcp:8787 tcp:8787
 ```
 
 然后在 App 的“设置 → 数据源”选择“官方数据”，回到首页手动同步。
-如果使用模拟器，采集器地址可用 `http://10.0.2.2:8787/v1/glm-coding-plan`，
-但当前 `BuildConfig` 未暴露配置项；默认走 `adb reverse`。
+如果使用模拟器，采集器地址可用 `http://10.0.2.2:8787/v1/glm-coding-plan`；
+默认地址在 Debug 构建中是 `http://127.0.0.1:8787/v1/glm-coding-plan`。
+
+## 远程模式：CI 定时采集 + 静态 JSON
+
+生产/验收不需要开发机一直开着。仓库内的
+`.github/workflows/glm-collector.yml` 会每 30 分钟：
+
+1. 在 Ubuntu runner 上安装 Node 24 和 Chrome；
+2. 先跑采集器测试；
+3. 用 headless Chrome 采集官方套餐页；
+4. 用 `validate-payload.mjs` 校验 3 档 × 3 周期、来源、金额和新鲜度；
+5. 把 JSON 作为 GitHub Pages artifact 发布。
+
+首次使用前：
+
+1. 把仓库推到 GitHub；
+2. 在仓库 **Settings → Pages → Build and deployment** 选择 **GitHub Actions**；
+3. 手动运行一次 `GLM Coding Plan collector` workflow（`workflow_dispatch`）。
+
+发布后的 endpoint 形如：
+
+```text
+https://<owner>.github.io/<repo>/glm-coding-plan.json
+```
+
+Android 构建时注入：
+
+```bash
+./gradlew assembleDebug \
+  -PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json
+
+./gradlew assembleRelease \
+  -PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json
+```
+
+- Debug 未传 property 时默认连本机 `127.0.0.1:8787`。
+- Release 未传 property 时 endpoint 为空，官方模式会明确显示“未配置 GLM 官方采集地址”，
+  不会悄悄请求错误地址。
+- 远程 endpoint 必须是 HTTPS；`network_security_config` 只对 localhost/10.0.2.2
+  放行明文。
+- App 会拒绝抓取时间超过 **2 小时**的 payload；CI 每 30 分钟刷新，失败时不会覆盖
+  上一次已发布的 JSON。超时后官方同步会失败并保留缓存，而不是把旧数据描述成实时。
+
+可在仓库 **Actions → GLM Coding Plan collector** 查看每次采集结果；Pages
+的 `index.html` 会显示本次抓取时间和来源链接。
+
+## 校验
+
+```bash
+# CI 使用：校验 JSON 是否完整、来源可信、抓取时间在有效窗口内
+node tools/glm-collector/validate-payload.mjs \
+  public/glm-coding-plan.json --max-age-seconds 1800
+
+# 单独看校验器测试
+node --test tools/glm-collector/test/validate.test.mjs
+```
 
 ## JSON 契约
 
@@ -118,11 +173,12 @@ adb reverse tcp:8787 tcp:8787
 ## 测试
 
 ```bash
-node --test tools/glm-collector/test/payload.test.mjs
+node --test tools/glm-collector/test/*.test.mjs
 ```
 
 测试覆盖金额解析、3 档 × 3 周期 = 9 个 offer、季/年总价与月均、缺失 tab/档位、
-当前价高于原价等失败路径。
+当前价高于原价、来源/来源 ID 不匹配、重复 ID、过期/未来抓取时间，以及
+`validate-payload.mjs` 的失败关闭行为。当前 10 / 10 通过（4 payload + 6 校验/CLI）。
 
 ## 已知限制
 
@@ -132,4 +188,4 @@ node --test tools/glm-collector/test/payload.test.mjs
 - `taxIncluded` 固定为 `true`（页面为含税展示价；如官方页面明确不含税，需要改代码）。
 - 只覆盖个人套餐，不含团队套餐、优惠券、首月立减等登录后价格。
 - 页面文案/价格随时可能变化；每次采集都以 `fetchedAtEpochMillis` 和原文摘要留痕。
-- 需要本机 Chrome；Android 设备无法直接渲染该 SPA，因此采集器必须运行在开发机。
+- 本地运行需要 Chrome；CI 使用 `browser-actions/setup-chrome`。Android 设备无法直接渲染该 SPA，Debug 通过本机采集器或 `adb reverse` 获取 JSON。

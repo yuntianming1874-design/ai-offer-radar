@@ -1,28 +1,31 @@
 # AI 优惠雷达：开发者交接文档
 
 更新时间：2026-10-31
-交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源（本机渲染采集器），86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成。
+交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源，86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成；随后补充了 **endpoint 构建时配置 + GitHub Actions 定时采集**（远程仓库/Pages 尚未启用）。
 
 ## 一句话状态
 
-项目是一个可构建、可安装、可测试的**本地优先 App**：Room、演示数据源、真实 GLM 官方源、同步、订阅、历史价格、官网跳转、点击统计、WorkManager、通知、深链、设置页和数据源边界都已打通；**没有后端，没有 FCM 配置**，真实官方源依赖开发机上的本机采集器。
+项目是一个可构建、可安装、可测试的**本地优先 App**：Room、演示数据源、真实 GLM 官方源、同步、订阅、历史价格、官网跳转、点击统计、WorkManager、通知、深链、设置页和数据源边界都已打通；**没有后端，没有 FCM 配置**。真实官方源优先从 CI 定时发布的 HTTPS 静态 JSON 读取，Debug 也可连本机渲染采集器；官方快照超过 2 小时会被客户端拒绝。
 
-`AppSettings.dataSourceMode` 默认 `DEMO`，也可以切到 `OFFICIAL`。官方模式注入 `GlmCodingPlanRemoteDataSource`（sourceId `glm-coding-plan-official`），通过 `adb reverse tcp:8787` 请求本机 `tools/glm-collector`；采集失败时显示真实失败原因并保留缓存，不把旧价说成实时价。不要把内置演示数据描述成实时优惠；首页“演示数据，非实时优惠”横幅是产品约束，不是临时占位。
+`AppSettings.dataSourceMode` 默认 `DEMO`，也可以切到 `OFFICIAL`。官方模式使用 `GlmCodingPlanRemoteDataSource`（sourceId `glm-coding-plan-official`），endpoint 来自 `BuildConfig.GLM_COLLECTOR_URL`：Debug 默认本机 `http://127.0.0.1:8787/v1/glm-coding-plan`，Release 通过 `-PglmCollectorUrl=https://.../glm-coding-plan.json` 注入，未配置时明确失败关闭。采集失败或快照过期时显示真实失败原因并保留缓存，不把旧价说成实时价。不要把内置演示数据描述成实时优惠；首页“演示数据，非实时优惠”横幅是产品约束，不是临时占位。
 
 ## 当前验证基线
 
 阶段 9/10/11/12 验证设备：OPD2515，Android 17 / API 37，adb 序列号 `<device-serial>`。2026-10-30 22:34 clean 后阶段 11 `connectedDebugAndroidTest` 通过：**84 / 84**（1m 6s）；阶段 11 手工验收 1–8 已于 22:19–22:32 执行，证据在 `docs/evidence/2026-10-30/phase11/device-manual/`。
 2026-10-31 00:13 阶段 12 `connectedDebugAndroidTest` 通过：**86 / 86**，0 failed / 0 errors / 0 skipped（1m 5s）；官方模式真机同步、季付总价/月均、采集器失败缓存态与切回演示隔离均已验收，证据在 `docs/evidence/2026-10-30/phase12/device-manual/`。
+2026-10-31 00:53 阶段 12 增强（endpoint + CI）复跑：clean 56s / 84 tasks；JVM **137 / 137（23 suites）**；Lint 0 errors / 2 warnings；`connectedDebugAndroidTest` **86 / 86**（1m 8s）；采集器 Node 测试 **10 / 10**；Release endpoint 两种构建均通过。
 
 | 项目 | 结果 |
 |---|---|
-| `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest` | `BUILD SUCCESSFUL`，81 tasks，54s（2026-10-31 00:14） |
-| JVM 单元测试 | 134 / 134，0 failed / 0 errors / 0 skipped（22 suites） |
-| 设备仪器测试 | 阶段 12 **86 / 86 通过**（00:13，1m 5s）；阶段 11 历史基线 84 / 84 |
+| `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest` | `BUILD SUCCESSFUL`，84 tasks，56s（2026-10-31 00:53，阶段 12 增强复跑） |
+| JVM 单元测试 | 137 / 137，0 failed / 0 errors / 0 skipped（23 suites） |
+| 设备仪器测试 | 阶段 12 **86 / 86 通过**（2026-10-31 00:52，1m 8s）；阶段 11 历史基线 84 / 84 |
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
-| 采集器 payload 测试 | 4 / 4（Node） |
+| 采集器测试 | 10 / 10（4 payload + 6 校验/CLI） |
+| Release endpoint | 无 property 时 `GLM_COLLECTOR_URL=""`；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时 BuildConfig 正确注入，`assembleRelease` 通过 |
 | 阶段 8/9/10/11 证据 | `docs/evidence/2026-10-30/` |
 | 阶段 12 证据 | `docs/evidence/2026-10-30/phase12/` |
+| 阶段 12 增强证据 | `docs/evidence/2026-10-31/`（23 JVM XML、86 项设备 XML、Node/Release 验证） |
 | 阶段 12 明细 | `docs/PHASE12_PROGRESS.md` |
 | 阶段 11 手工验收 | **已执行**（22:19–22:32）；`docs/PHASE11_DEVICE_ACCEPTANCE.md` |
 
@@ -97,7 +100,7 @@
 ### 数据源边界
 
 - 演示源：`DemoRemoteDataSource`，`sourceId = demo-local`。
-- 官方槽（阶段 12 起）：`GlmCodingPlanRemoteDataSource`，`sourceId = glm-coding-plan-official`，`sourceType = OFFICIAL_WEB`；默认请求 `http://127.0.0.1:8787/v1/glm-coding-plan`，依赖 `adb reverse tcp:8787 tcp:8787` 与本机 `tools/glm-collector`。`UnconfiguredOfficialRemoteDataSource` 已删除。
+- 官方槽（阶段 12 起）：`GlmCodingPlanRemoteDataSource`，`sourceId = glm-coding-plan-official`，`sourceType = OFFICIAL_WEB`；endpoint 来自 `BuildConfig.GLM_COLLECTOR_URL`（Debug 默认本机 `http://127.0.0.1:8787/v1/glm-coding-plan`，Release 通过 `-PglmCollectorUrl=...` 注入 CI/Pages HTTPS JSON），并校验 schemaVersion、来源、抓取时间与 2 小时新鲜度。`UnconfiguredOfficialRemoteDataSource` 已删除。
 - `SettingsAwareSyncService` 每次 `sync()` 读取当前 `dataSourceMode`，只调用对应 source 的 `OfferSyncService`；不要绕过它直接把 demo source 注入官方同步。
 - `RemotePayloadNormalizer` 现在校验：
   - 官方源必须有 `sourceUrl`；
@@ -167,21 +170,33 @@
 - 采集器：`tools/glm-collector/`
   - 官方套餐页 `https://www.bigmodel.cn/glm-coding` 是 SPA，价格需 JS 渲染；匿名 `/api/biz/product/overview` 返回 1001 需要 Authorization。
   - `collector.mjs` 用 Node 24 内置 WebSocket + Chrome headless CDP，点击“连续包月/包季/包年”三个 tab，读取 `.cp-card`，输出与 `RemoteSyncPayload` 同构的 JSON；`--once` 或 `--serve`（127.0.0.1:8787，5 分钟缓存，失败 503 不回退旧价）。
-  - `payload.mjs` 做金额解析和契约校验；4 个 Node 测试通过。
-  - 详情与启动方式见 `tools/glm-collector/README.md`。
+  - `payload.mjs` 做金额解析和契约校验；4 个 payload 测试 + 6 个 payload/CLI 校验测试通过。
+  - 详情与启动方式见 `tools/glm-collector/README.md`；CI 发布见 `docs/CI_GLM_COLLECTOR.md`。
 - Android：
   - `BillingPeriod` 新增 `QUARTERLY(3)`；首页显示季度总价 + 折合月均，详情季/年都显示月均；图表对季/年使用月均。
-  - `GlmCodingPlanRemoteDataSource` 用 `HttpURLConnection` + kotlinx-serialization JSON 读取采集器，校验 schemaVersion/source/URL/fetchedAt；错误消息区分采集器不可达、HTTP 非 2xx、字段缺失。
-  - `network_security_config.xml` 只允许 `127.0.0.1`、`localhost`、`10.0.2.2` 明文；Manifest 已引用。
-  - `AppContainer` 官方槽已切到真实适配器，`officialAdapterConfigured = true`；`UnconfiguredOfficialRemoteDataSource` 已删除。
-  - 采集器失败时官方模式保留已有官方缓存并显示失败原因；不会回退到旧价当实时价。演示数据仍完全隔离。
+  - `GlmCodingPlanRemoteDataSource` 用 `HttpURLConnection` + kotlinx-serialization JSON 读取 endpoint，校验 schemaVersion/source/URL/fetchedAt 和 2 小时新鲜度；错误消息区分 endpoint 未配置、采集器不可达、HTTP 非 2xx、过期、字段缺失。
+  - `network_security_config.xml` 只允许 `127.0.0.1`、`localhost`、`10.0.2.2` 明文；Manifest 已引用。远程 endpoint 必须是 HTTPS。
+  - `AppContainer` 官方槽使用 `BuildConfig.GLM_COLLECTOR_URL`；`officialAdapterConfigured = endpoint.isNotBlank()`；`UnconfiguredOfficialRemoteDataSource` 已删除。
+  - 采集器失败或快照过期时官方模式保留已有官方缓存并显示失败原因；不会回退到旧价当实时价。演示数据仍完全隔离。
 - 验证结果：
   - clean 构建 54s / 81 tasks；JVM 134/134（22 suites）；Lint 0 errors / 2 warnings；采集器 payload 4/4。
   - `connectedDebugAndroidTest` **86 / 86**（00:13，1m 5s）；首次运行因设备 Wi-Fi/移动数据关闭导致 7 个深链测试超时，打开网络后重跑全绿。
   - 官方模式真机：同步成功，首页 GLM Lite/Pro/Max 选年付最低月均；Lite 年付 ¥991.20/年、月均 ¥82.60；详情季付总价 ¥283.20、原价 ¥354.00、月均 ¥94.40。
   - 停止采集器后同步失败，缓存保留、失败原因展示、最后成功同步不变；切回演示后官方产品完全隐藏。
 - 证据：`docs/evidence/2026-10-30/phase12/`（含 `phase12-connected-test-results.xml`、22 个 JVM XML、`device-manual/` 截图与 UI dump）；明细见 `docs/PHASE12_PROGRESS.md`。
-- 已知限制：采集器依赖本机 Chrome；个人套餐公开页；团队套餐/登录优惠/优惠券不含；选择器改版会失败；月付 tab 无划线原价；`taxIncluded` 按页面含税处理。
+- 已知限制：个人套餐公开页；团队套餐/登录优惠/优惠券不含；选择器改版会失败；月付 tab 无划线原价；`taxIncluded` 按页面含税处理。
+
+### 阶段 12 增强：endpoint 配置化 + CI 定时采集
+
+- `app/build.gradle.kts` 增加 `buildConfigField("String", "GLM_COLLECTOR_URL", ...)`：
+  - Debug 未传 `-PglmCollectorUrl` 时默认 `http://127.0.0.1:8787/v1/glm-coding-plan`；
+  - Release 未传时为空，官方模式明确显示“未配置 GLM 官方采集地址”，不请求错误地址；
+  - 远程/CI 构建示例：`./gradlew assembleRelease -PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json`。
+- `.github/workflows/glm-collector.yml`：每 30 分钟 + 手动触发；Node 24 + Chrome；先跑采集器/校验器测试，再真实采集，`validate-payload.mjs` 校验 3×3=9、来源、金额、新鲜度，最后发布到 GitHub Pages。
+- `tools/glm-collector/validate.mjs` / `validate-payload.mjs`：严格校验；CI 失败时不覆盖上一版；App 端 2 小时新鲜度兜底。
+- 远程仓库与 GitHub Pages 尚未配置，因此 workflow **已实现但未在真实远端执行**；本地可复现命令见 `docs/CI_GLM_COLLECTOR.md`。
+- 复跑结果（2026-10-31 00:53）：clean 构建 56s / 84 tasks；JVM **137 / 137（23 suites）**；Lint 0 errors / 2 warnings；`connectedDebugAndroidTest` **86 / 86**（1m 8s）；采集器测试 **10 / 10**；Release 空 endpoint 与注入 endpoint 均构建成功并核对 BuildConfig。
+- 新增测试：`GlmCodingPlanRemoteDataSourceTest` 的空 endpoint/过期 payload，`BuildConfigTest`；采集器 `validate.test.mjs` 5 个校验 + 1 个 CLI 失败关闭测试。
 
 
 ## 代码地图
@@ -210,7 +225,8 @@ app/src/main/java/com/aioffer/radar/
 ├── feature/                       Home / Settings / Detail / Statistics
 └── navigation/                    Compose 路由（含 settings）与深链
 
-tools/glm-collector/               GLM 官方套餐页本机渲染采集器（Node + Chrome CDP）
+tools/glm-collector/               GLM 官方套餐页本机/CI 渲染采集器（Node + Chrome CDP）+ payload 校验
+.github/workflows/glm-collector.yml 定时采集、校验并发布到 GitHub Pages
 app/src/androidTest/assets/        真实采集 JSON fixture
 ```
 
@@ -279,14 +295,14 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 - 官方数据源接入契约：[DATA_SOURCE_INTEGRATION.md](DATA_SOURCE_INTEGRATION.md)
 - 阶段 8 验收：[PHASE8_PROGRESS.md](PHASE8_PROGRESS.md)
 - 阶段 6 验收：[PHASE6_PROGRESS.md](PHASE6_PROGRESS.md)
-- 最新证据：[evidence/2026-10-30/README.md](evidence/2026-10-30/README.md)
+- 最新证据：[evidence/2026-10-31/README.md](evidence/2026-10-31/README.md)；阶段 9–12 历史证据：[evidence/2026-10-30/README.md](evidence/2026-10-30/README.md)
 - Room schema：`app/schemas/`
 - 测试数据与 fake：`app/src/androidTest/java/com/aioffer/radar/core/testing/`、`app/src/test/...`
 - 依赖版本集中在 `gradle/libs.versions.toml`。
 
 ## 已知限制
 
-1. **真实官方源依赖本机采集器**：GLM Coding Plan 走 `tools/glm-collector` + headless Chrome + `adb reverse`，不是生产后端；设备断开 USB 或采集器停止时官方同步失败。页面选择器改版会采集失败；不覆盖团队套餐、登录优惠、优惠券。
+1. **官方源依赖本机/CI 采集层**：Debug 的 GLM Coding Plan 走 `tools/glm-collector` + headless Chrome + `adb reverse`；Release/CI 路径已实现为 HTTPS Pages 快照，但远程仓库/Pages 尚未启用，所以还没有真实生产数据服务。页面选择器改版会采集失败；不覆盖团队套餐、登录优惠、优惠券。
 2. **设备矩阵有限**：阶段 12 在 OPD2515 / API 37 上通过 86 / 86，阶段 11 历史基线 84 / 84；API 26–36、其他 ROM、通知渠道关闭、厂商省电策略和长期 soak 仍属未验证。
 3. **没有后端/账号/支付**；“去订阅”只是打开官网入口，不完成购买。
 4. **FCM 未接入**：`NoOpPushNotificationService` 只是边界。
@@ -294,36 +310,43 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 6. **通知权限/渠道边界**：拒绝或渠道关闭时事件保留 PENDING；恢复后补发；没有长期 soak。
 7. **深链罕见路径**：已有 saved state 且系统用全新 intent 重建 Activity 时，启动 intent 会被跳过；常规冷启动/热启动/旋转已覆盖。
 8. **历史最低近似**：同组多优惠同价时用“同金额最新快照”近似当前观测；演示数据不覆盖该组合。
-9. **发布能力缺失**：没有 release 签名、CI、Play 配置、混淆策略；`release` 未开启 minify。
+9. **发布能力缺失**：没有 release 签名、应用发布 CI、Play 配置、混淆策略；`release` 未开启 minify。GLM 采集 workflow 已实现，但尚未在 GitHub 远端执行。
 10. **Lint 仍有 2 个 warning**：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
-11. **版本管理**：已初始化 git 仓库（`main`），阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到本地 `main`（标签 `phase12-glm-source`）；远程仓库尚未配置。后续改动请新建 commit/分支，不要覆盖既有基线标签。
-12. **文档历史**：`PHASE6_PROGRESS.md` 和旧版 `PHASE8_PROGRESS.md` 曾出现不可复核的完成声明；以根 README、阶段 8–12 文档和 evidence XML 为准。阶段 11 手工项与“仅自动化覆盖/未验证”项必须分开，不得混写成全部通过；阶段 12 的 86 项设备测试已完成并归档，引用时以 `phase12-connected-test-results.xml` 为准。
+11. **版本管理**：已初始化 git 仓库（`main`），阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到本地 `main`（标签 `phase12-glm-source`）；远程仓库尚未配置。阶段 12 增强（endpoint + CI）已提交到本地 `main`（标签 `phase12-endpoint-ci`），远程仓库待推送；后续请新建 commit/分支，不要覆盖既有基线标签。
+12. **文档历史**：`PHASE6_PROGRESS.md` 和旧版 `PHASE8_PROGRESS.md` 曾出现不可复核的完成声明；以根 README、阶段 8–12 文档和 evidence XML 为准。阶段 11 手工项与“仅自动化覆盖/未验证”项必须分开，不得混写成全部通过；阶段 12 的 86 项设备测试已完成并归档，引用时以 `phase12-connected-test-results.xml` 为准；阶段 12 增强引用 `evidence/2026-10-31/README.md`。
 
 ## 建议的下一步
 
-1. **扩大设备矩阵与长期 soak**
+1. **启用远程 CI 与 Pages**
+   - 配置私有远程仓库，推送 `main` 与标签；在 Settings → Pages 选择 GitHub Actions。
+   - 手动跑一次 `GLM Coding Plan collector`，确认 `glm-coding-plan.json` 可访问；用 `-PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json` 构建 Release。
+   - 手机仅用蜂窝网络验收官方模式：成功同步、快照过期拒绝、断网缓存不冒充实时。
+
+2. **扩大设备矩阵与长期 soak**
    - 在 API 26–36、其他 ROM、通知渠道关闭、厂商省电策略和长期运行下复跑 `docs/PHASE11_DEVICE_ACCEPTANCE.md` 的 1–8，并复跑阶段 12 官方模式。
    - 归档截图、UI dump、`dumpsys notification`、构建/测试日志和失败原因；未执行项保持“未验证”。
 
-2. **把采集器替换为生产数据源**
+3. **把采集器替换为生产数据源**
    - 优先官方开放 API/授权接口；保持 `GlmCodingPlanRemoteDataSource` 输出契约不变，只替换 endpoint/采集层。
    - 若继续用渲染采集，需要监控、告警、选择器回归和部署位置（不能依赖开发者本机）。
 
-3. **发布前**
+4. **发布前**
    - release 签名、CI、lint 清零、WorkManager soak、真实设备长期运行。
    - 复核通知 `SENT` 语义和渠道关闭行为。
    - 补深链“saved state + 新 intent”边界，或明确接受。
 
-4. **阶段 12 验收已完成**
+5. **阶段 12 验收已完成**
    - 86 / 86 设备测试（`phase12-connected-test-results.xml`）与官方模式真机验收已归档。
    - 后续改动请新建 commit/分支，不要覆盖 `phase11-accepted` 基线标签。
 
 ## 接手检查清单
 
-- [x] `./gradlew clean assembleDebug testDebugUnitTest lintDebug` 通过（2026-10-30：134 JVM，0 failed）
+- [x] `./gradlew clean assembleDebug testDebugUnitTest lintDebug` 通过（2026-10-31：137 JVM / 23 suites，0 failed）
 - [x] `assembleDebugAndroidTest` 编译通过；阶段 12 `connectedDebugAndroidTest` 已执行 86 / 86
-- [x] `connectedDebugAndroidTest` 通过（阶段 12：86 / 86，2026-10-31 00:13，OPD2515 / API 37）
-- [x] `node --test tools/glm-collector/test/payload.test.mjs` 通过（4 / 4）
+- [x] `connectedDebugAndroidTest` 通过（2026-10-31：86 / 86，OPD2515 / API 37，1m 8s）
+- [x] `node --test tools/glm-collector/test/*.test.mjs` 通过（10 / 10）
+- [x] Release 空 endpoint 构建通过，BuildConfig 为空；注入 `-PglmCollectorUrl` 后 BuildConfig 正确
+- [ ] GitHub 远程仓库/Pages/定时 workflow 真实执行
 - [x] 首装首页有“演示数据，非实时优惠”，状态卡显示“数据来源：演示数据”
 - [x] 设置页切到“官方数据”显示官方已配置说明与采集器提示；采集器未运行时同步失败并显示原因
 - [x] 设置页切回“演示数据”，产品恢复且来源仍标“演示数据”

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aioffer.radar.feature.home.HomeViewModelTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2026-10-30T16:51:55" hostname="192.168.31.129" time="0.12">
+  <properties/>
+  <testcase name="switchingDataSourceMode_clearsStaleSyncError" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.016"/>
+  <testcase name="syncFailure_keepsCachedProducts" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.005"/>
+  <testcase name="offerExpiresWhileScreenIsOpen_disappearsFromCurrentOffers" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.007"/>
+  <testcase name="switchingDataSource_neverRelabelsStoredDemoHistory" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.008"/>
+  <testcase name="subscription_isImmediateAndSurvivesViewModelRecreation" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.008"/>
+  <testcase name="unsubscribe_updatesImmediately" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.005"/>
+  <testcase name="failedInitialSync_showsError" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="officialMode_hidesDemoProductsAndShowsOfficialSource" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="initialSync_showsContentAndDemoSource" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.004"/>
+  <testcase name="successfulSyncWithoutProducts_showsEmpty" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="offlineWithCache_keepsContentAndSkipsSync" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.005"/>
+  <testcase name="notificationPromptDismissal_isPersisted" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.003"/>
+  <testcase name="lastSuccessfulSyncAndFailureReason_areExposed" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="officialOffersAreOnlyVisibleInOfficialMode" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.004"/>
+  <testcase name="subscribeAll_marksEveryProductImmediately" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.009"/>
+  <testcase name="manualRefresh_exposesSyncingAndPreventsDuplicateSync" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.015"/>
+  <testcase name="failedSubscription_rollsBackAndShowsError" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.003"/>
+  <testcase name="databaseReadFailure_isRecoverableThroughRetry" classname="com.aioffer.radar.feature.home.HomeViewModelTest" time="0.016"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

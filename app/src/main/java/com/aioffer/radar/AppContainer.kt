@@ -52,11 +52,15 @@ class AppContainer(context: Context) {
     )
 
     /**
-     * The official slot reads the GLM Coding Plan snapshot from the local
-     * rendering collector. It uses its own source ID and source metadata, so
-     * demo payloads can never be persisted as official data.
+     * The official slot reads the GLM Coding Plan snapshot either from the
+     * local renderer (debug default) or from the CI-published HTTPS JSON when
+     * `-PglmCollectorUrl=...` is supplied at build time. It uses its own source
+     * ID and source metadata, so demo payloads can never be persisted as
+     * official data.
      */
-    private val officialRemoteDataSource = GlmCodingPlanRemoteDataSource()
+    private val officialCollectorUrl = BuildConfig.GLM_COLLECTOR_URL
+    private val officialRemoteDataSource =
+        GlmCodingPlanRemoteDataSource(endpoint = officialCollectorUrl)
     private val repository = LocalRadarRepository(database)
     private val demoSyncService = OfferSyncService(
         remoteDataSource = demoRemoteDataSource,
@@ -105,7 +109,7 @@ class AppContainer(context: Context) {
 
     val demoSourceId: String = demoRemoteDataSource.sourceId
     val officialSourceId: String = officialRemoteDataSource.sourceId
-    val officialAdapterConfigured: Boolean = true
+    val officialAdapterConfigured: Boolean = officialCollectorUrl.isNotBlank()
 
     fun homeViewModelFactory() = HomeViewModel.factory(
         repository = repository,

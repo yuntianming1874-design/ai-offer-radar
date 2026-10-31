@@ -5,6 +5,17 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// The collector endpoint is injected at build time so debug builds can talk to
+// the local renderer while release builds point at the CI-published HTTPS JSON.
+// Debug defaults to localhost; release has no default and must be configured.
+val glmCollectorUrl: String = providers.gradleProperty("glmCollectorUrl")
+    .orNull
+    ?.trim()
+    .orEmpty()
+
+fun String.asBuildConfigString(): String =
+    "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
 android {
     namespace = "com.aioffer.radar"
     compileSdk = 35
@@ -21,7 +32,20 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "GLM_COLLECTOR_URL",
+                glmCollectorUrl.ifBlank { "http://127.0.0.1:8787/v1/glm-coding-plan" }
+                    .asBuildConfigString()
+            )
+        }
         release {
+            buildConfigField(
+                "String",
+                "GLM_COLLECTOR_URL",
+                glmCollectorUrl.asBuildConfigString()
+            )
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -41,6 +65,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     sourceSets {
