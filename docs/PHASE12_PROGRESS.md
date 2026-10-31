@@ -1,7 +1,7 @@
 # 阶段 12：GLM Coding Plan 官方源纵向切片
 
 更新时间：2026-10-31
-状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 首次发布与 JSON 校验；P1 CI 自证远端首跑通过（失败建 Issue 路径未注入演练）**
+状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 发布与 JSON 校验；P1 CI 自证远端首跑通过；P2 失败告警演练与 unsigned Release workflow 远端通过，正式签名待配置**
 范围：第一条真实官方数据源、`QUARTERLY` 计费周期、采集器、Android 适配器、endpoint/CI、测试与证据。
 
 > 2026-10-31 00:53 增强：endpoint 已改为构建时注入（Debug 本机 / Release CI HTTPS），
@@ -197,15 +197,17 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 测试：新增 `verify-published.test.mjs` 5 个测试；Node 总数 **15 / 15**。
 - 本地验证（15:48）：线上 `verify-published` 通过；`testDebugUnitTest assembleRelease` 33s / 76 tasks，JVM 137/137；helper APK 签名脚本通过；两个 workflow YAML 解析通过。
 - 远端首跑（16:02）：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449) 成功；`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；[health run 41182665177](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177) 7s 成功。
-- **未完成**：失败建 Issue 的注入路径未演练；`notify-failure` 在健康运行中按预期跳过，不能写成“失败告警已实测”。
+- P2 已补失败路径演练：Issue #1 创建、去重、恢复关闭与失败 run 置红；真实 stale 事故未发生。
 
-### P2：失败告警演练 + Release 签名骨架（本地完成）
+### P2：失败告警演练 + Release 签名骨架（本地 + 远端完成，正式签名待配置）
 
-- `glm-snapshot-health.yml` 新增 `workflow_dispatch` 输入 `max_age_seconds`，默认 `7200`；手动传 `1` 触发 stale 路径，Issue body 记录实际阈值；恢复后关闭。
+- `glm-snapshot-health.yml` 新增 `workflow_dispatch` 输入 `max_age_seconds`，默认 `7200`；手动传 `1` 触发 stale 路径，Issue body 记录实际阈值；恢复后关闭；失败建 Issue 后新增 `Fail the run after filing the alert`，避免 run 绿色掩盖告警。
 - `release.yml`：手动输入 version/endpoint/sign 开关；从四个 Secrets 解码 keystore；JDK 17 + Gradle；跑 `testDebugUnitTest assembleRelease`；`apksigner verify`；输出 SHA-256 与 artifact。
 - `app/build.gradle.kts`：四个 `RELEASE_*` 环境变量齐全才创建 release signingConfig，否则 unsigned；支持 `-PreleaseVersionCode` / `-PreleaseVersionName`。
 - 本地验证：临时 key 签名成功（v2 scheme），无 key 时 `app-release-unsigned.apk` 仍可构建；两个 workflow YAML 解析通过；临时 key 已删除。
-- **未完成**：远端 failure drill、`release.yml` 首跑、正式 keystore 配置；不能写成“失败告警已实测”或“正式签名包已产出”。
+- 远端失败演练：run 41214658712 创建 Issue #1；run 41214743795 去重且 run 置红；run 41214800226 恢复并关闭 Issue。
+- 远端 Release：run 41214833322 unsigned 成功（2m22s，APK SHA-256 `cf32651a…`）；run 41215119074 在缺四个 Secrets 时 22s 失败关闭。
+- **未完成**：正式 release keystore 尚未配置，真实签名包未构建；真实 stale 事故与 schedule 长期稳定性未观察。不能写成“正式签名包已产出”。
 
 ## 已知限制
 
@@ -217,11 +219,12 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 官方套餐页没有匿名价格 API；在拿到正式授权/稳定接口前，不把采集器部署成公共服务。
 - 微博/小红书 robots 对通用爬虫 `Disallow: /`，不做自动抓取；B 站/社媒只能做
   **未验证线索**，不能进入价格库或触发通知。详见 `docs/DATA_SOURCE_INTEGRATION.md`。
-- release 正式签名、API 26–36/其他 ROM、通知渠道/省电 soak、FCM 仍未验证或未实现；P1 的失败建 Issue 路径未注入演练，定时 schedule 的长期稳定性待观察。
+- release 正式签名、API 26–36/其他 ROM、通知渠道/省电 soak、FCM 仍未验证或未实现；P2 失败告警注入、去重、恢复关闭已在远端实测，但真实 stale 事故与定时 schedule 的长期稳定性仍待观察。
+- 2026-10-31 23:31 手动触发 collector 刷新快照；最后一次自动 schedule 为 13:31Z，14:01/14:31/15:01/15:31 未出现，schedule 可靠性需要继续监控。
 
 ## 下一步
 
-1. 补一次故意失败/恢复演练，确认 Issue 创建、1 小时去重与恢复关闭；观察定时 schedule 的长期稳定性。
+1. 用户配置四个 release Secrets，跑 `release.yml` 的 `sign_release=true` 并真机安装签名包；观察定时 schedule 的长期稳定性。
 2. 为采集器增加 selector 漂移回归与更明确的失败摘要（当前已有 workflow 失败/2h 健康 Issue）。
 3. 再扩展第二个产品，仍按“单产品、单来源、可审计”推进。
 4. 扩大设备矩阵：API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak。

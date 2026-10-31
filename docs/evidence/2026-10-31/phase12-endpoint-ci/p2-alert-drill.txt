@@ -1,0 +1,38 @@
+P2 stale-snapshot alert drill
+Date: 2026-10-31 23:23-23:25 Asia/Shanghai (15:23-15:25Z)
+Repository: yuntianming1874-design/ai-offer-radar (public)
+Workflow: .github/workflows/glm-snapshot-health.yml
+
+1) Failure path / issue creation
+   Run: 41214658712
+   URL: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214658712
+   Dispatch input: max_age_seconds=1
+   Result: freshness check failed; Issue #1 created.
+   Issue: https://github.com/yuntianming1874-design/ai-offer-radar/issues/1
+   Issue body recorded "failed the 1s freshness check" and the run URL.
+   Note: this run predates the "fail the run after filing the alert" step, so the
+   workflow run itself is green while the step outcome is failure. The final
+   behavior is covered by run 41214743795 below.
+
+2) Dedupe path / run is red
+   Run: 41214743795
+   URL: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214743795
+   Dispatch input: max_age_seconds=1
+   Result: check failed; existing Issue #1 was found; no new comment (0 comments);
+   Issue updatedAt stayed 2026-10-31T15:24:13Z; final step "Fail the run after
+   filing the alert" made the run fail with exit code 1.
+
+3) Recovery path / issue closed
+   Run: 41214800226
+   URL: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214800226
+   Dispatch input: default 7200
+   Result: freshness check passed; Issue #1 received one recovery comment and was
+   closed.
+   Final Issue state: CLOSED, comments=1.
+
+Conclusion:
+- Issue creation: verified.
+- 1-hour dedupe: verified (no duplicate comment; updatedAt unchanged).
+- Recovery close: verified.
+- Failure run status: verified red after the final fix.
+- This was a manual threshold drill, not a real stale snapshot incident.

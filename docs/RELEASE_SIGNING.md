@@ -63,6 +63,17 @@ workflow 会：
 
 只验证构建链路、不接触密钥时，可用 `sign_release=false` 产出 unsigned APK。
 
+## 3.1 已验证 / 未验证
+
+- 已验证（2026-10-31 23:26–23:29）：`sign_release=false` 远端构建成功，
+  versionCode 2 / versionName 1.0.1-ci，APK SHA-256
+  `cf32651adbfc989c840c489c00b0f48c18bee3e2a2049e254cf07f74faf39307`，
+  `apksigner` 显示 `DOES NOT VERIFY`（符合 unsigned）。
+- 已验证：`sign_release=true` 但四个 Secrets 未配置时，workflow 在构建前
+  22s 失败，并逐项报告缺失的 Secret；不会静默产出 unsigned 包。
+- **未验证**：使用真实 release keystore 的远端签名构建、`apksigner verify --print-certs`
+  和真机安装。keystore 由仓库所有者生成并保管，不进入仓库。
+
 ## 4. 本地签名构建
 
 密码通过环境变量提供，不写进命令行历史：

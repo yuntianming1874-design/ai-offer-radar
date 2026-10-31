@@ -15,7 +15,8 @@
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
 | 设备自动化测试 | **86 / 86**（2026-10-31 00:52，OPD2515 / API 37，1m 8s）；阶段 11 历史基线 84 / 84 |
 | 采集器/发布校验测试 | **15 / 15**（payload 4 + 校验/CLI 6 + 发布端点校验 5） |
-| P1 CI 自证（部署后哈希、Android job、Issue 告警） | **远端首跑通过**：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)；部署后校验、Android job、恢复关闭、health workflow 成功；失败建 Issue 未注入演练 |
+| P1 CI 自证（部署后哈希、Android job、Issue 告警） | **远端首跑通过**：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)；部署后校验、Android job、恢复关闭、health workflow 成功；P2 已补失败路径演练 |
+| P2 失败告警 + Release workflow | 失败告警演练远端通过（Issue #1 创建/去重/恢复关闭、失败 run 置红）；unsigned Release 远端成功（run 41214833322）；缺 Secrets 时失败关闭（run 41215119074）；正式签名待配置 |
 | Release endpoint | 无 property 时为空（失败关闭）；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时构建成功并正确注入 |
 | CI 定时采集 | **已在 GitHub Actions 真实运行成功**：run 41180172626；Pages 快照 3 products / 9 offers，JSON 校验通过 |
 | 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
@@ -43,9 +44,10 @@
 - P1 CI 自证：deploy 后 `verify-published.mjs` 重新拉取线上 JSON，要求 HTTP 200、schema/2h 新鲜度通过且字节 SHA-256 等于 CI 产物；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建并签 helper APK；失败/2h 过期自动开 Issue，恢复后关闭。
 - 本地验证：Node **15/15**；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过；线上 `verify-published` 通过；Android Release job 等价命令 33s / 76 tasks；两个 YAML 解析通过。
 - **远端首跑（2026-10-31 16:02）**：`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；`glm-snapshot-health` 7s 成功。页面：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>。
-- P2 本地：health workflow 支持 `max_age_seconds`（演练用 `1`，生产默认 `7200`）；`release.yml` + Gradle 条件 signingConfig + `docs/RELEASE_SIGNING.md`；临时 key 签名通过 `apksigner`，无 key 时 release 保持 unsigned。
-- **未验证**：失败建 Issue 的远端注入/去重/关闭；P2 签名 workflow 的远端运行；正式 release keystore；定时 schedule 的长期稳定性。
-- 下一步：先跑 health 失败演练，再跑 `release.yml` 的 `sign_release=false`，最后配置正式 keystore。
+- P2 失败告警演练（远端，2026-10-31 23:23–23:25）：`max_age_seconds=1` 创建 [Issue #1](https://github.com/yuntianming1874-design/ai-offer-radar/issues/1)（run 41214658712）；重复失败去重且 run 置红（run 41214743795）；默认 7200 恢复并关闭 Issue（run 41214800226）。这是手动阈值演练，不是真实 stale 事故。
+- P2 Release workflow（远端）：`sign_release=false` 构建成功（run 41214833322，2m22s，versionCode 2 / 1.0.1-ci，APK SHA-256 `cf32651a…`，unsigned）；`sign_release=true` 缺 Secrets 时 22s 失败关闭（run 41215119074），不会静默产出 unsigned 包。
+- **未验证/待配置**：正式 release keystore 的四个 Secrets；真实签名包与真机安装；定时 schedule 的长期稳定性；真实 stale 事故。
+- 下一步：用户配置四个 `RELEASE_*` Secrets，跑 `release.yml` 的 `sign_release=true` 并真机安装；随后做 API 26–36 矩阵。
 - 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md) 与 [RELEASE_SIGNING.md](RELEASE_SIGNING.md)。
 
 ## 2. 构建、运行和测试

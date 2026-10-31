@@ -1,0 +1,37 @@
+P2 release workflow remote verification
+Date: 2026-10-31 23:26-23:30 Asia/Shanghai (15:26-15:30Z)
+Repository: yuntianming1874-design/ai-offer-radar (public)
+Workflow: .github/workflows/release.yml
+
+1) Unsigned path (sign_release=false)
+   Run: 41214833322
+   URL: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214833322
+   Inputs: version_name=1.0.1-ci, version_code=2,
+           endpoint_url=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json,
+           sign_release=false
+   Result: build-release success, 2m22s.
+   Artifact: ai-offer-radar-release (8,049,968 bytes).
+   Downloaded APK: ai-offer-radar-1.0.1-ci-unsigned.apk
+   SHA-256: cf32651adbfc989c840c489c00b0f48c18bee3e2a2049e254cf07f74faf39307
+   aapt2: package=com.aioffer.radar, versionCode=2, versionName=1.0.1-ci,
+          minSdkVersion=26.
+   apksigner verify: DOES NOT VERIFY / Missing META-INF/MANIFEST.MF
+   (expected for an unsigned APK).
+
+2) Signing-secret fail-closed path (sign_release=true, no secrets configured)
+   Run: 41215119074
+   URL: https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41215119074
+   Result: build failed in 22s at "Check release signing secrets".
+   Errors:
+     RELEASE_KEYSTORE_BASE64 is not configured.
+     RELEASE_KEYSTORE_PASSWORD is not configured.
+     RELEASE_KEY_ALIAS is not configured.
+     RELEASE_KEY_PASSWORD is not configured.
+   The workflow does not silently produce an unsigned APK when signing is
+   requested.
+
+Conclusion:
+- Unsigned CI artifact: verified.
+- Missing-secret guard: verified (fails closed).
+- Signed CI artifact with a real release keystore: NOT verified, because the four
+  secrets are not configured. The user owns the keystore and must add the secrets.

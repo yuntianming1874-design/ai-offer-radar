@@ -1,6 +1,7 @@
 # 阶段 12 增强：endpoint 配置化 + CI 定时采集
 
 验证时间：2026-10-31 00:53（Asia/Shanghai）
+P2 远端验证：2026-10-31 23:23–23:30（Asia/Shanghai）
 最终设备复跑：2026-10-31 00:52（86 / 86，1m 8s）
 设备：OPD2515 / Android 17 / API 37 / serial `<device-serial>`
 基线：`6f4229a`（tag `phase12-glm-source`）
@@ -13,7 +14,7 @@
 | JVM 单元测试 | 同上 | 137 / 137，23 suites，0 failed / 0 errors / 0 skipped |
 | Lint | 同上 | 0 errors，2 warnings |
 | 设备仪器测试 | `./gradlew --offline --no-daemon connectedDebugAndroidTest` | 86 / 86，0 failed / 0 errors / 0 skipped，1m 8s（00:52 最终复跑） |
-| Node 采集器测试 | `node --test tools/glm-collector/test/*.test.mjs` | 10 / 10（P1 后 15 / 15） |
+| Node 采集器测试 | `node --test tools/glm-collector/test/*.test.mjs` | 15 / 15 |
 | 真实采集 | `node tools/glm-collector/collector.mjs --once` | 3 tabs / 9 offers / 12s |
 | payload 校验 | `node tools/glm-collector/validate-payload.mjs ... --max-age-seconds 1800` | 通过（3 档 / 9 offers） |
 | Release（无 endpoint） | `./gradlew --offline --no-daemon assembleRelease` | `BUILD SUCCESSFUL`；`GLM_COLLECTOR_URL=""` |
@@ -51,6 +52,8 @@
 - `p1-live-verification.txt`：线上 JSON 发布校验（3 档 / 9 offers、SHA-256）
 - `p1-workflow-check.txt`：两个 workflow 的 job 结构
 - `p1-remote-run.txt`：P1 远端首跑 run URL、job 耗时、发布哈希、BuildConfig 与 helper APK SHA-256
+- `p2-alert-drill.txt`：失败阈值演练、Issue #1 创建/去重/恢复关闭、失败 run 置红
+- `p2-release-workflow.txt`：unsigned Release 远端构建、APK 哈希/版本、缺密钥失败关闭
 
 ## P1 CI 自证（远端首跑通过，2026-10-31 16:02）
 
@@ -76,9 +79,36 @@
 
 P1 本地证据文件：`p1-node-tests.txt`、`p1-live-verification.txt`、`p1-workflow-check.txt`。
 
+## P2 失败告警演练与 Release 签名骨架（2026-10-31 23:23–23:30）
+
+### 失败告警演练（Issue #1）
+
+| 场景 | Run | 结果 |
+|---|---|---|
+| 阈值 1s，首次失败 | [41214658712](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214658712) | 校验失败，创建 [Issue #1](https://github.com/yuntianming1874-design/ai-offer-radar/issues/1)；该 run 在“失败置红”修复前，run 仍为绿色 |
+| 阈值 1s，重复失败 | [41214743795](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214743795) | 复用 Issue，0 条新评论，updatedAt 不变；最终 step 使 run 失败（红） |
+| 默认 7200，恢复 | [41214800226](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214800226) | 成功；Issue 收到恢复评论并关闭（CLOSED，1 条评论） |
+
+结论：Issue 创建、1 小时去重、恢复关闭、失败 run 置红均已实测；这是手动阈值演练，不是真实 stale 事故。
+
+### Release workflow
+
+| 场景 | Run | 结果 |
+|---|---|---|
+| `sign_release=false` | [41214833322](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214833322) | 成功 2m22s；artifact `ai-offer-radar-release`；APK `ai-offer-radar-1.0.1-ci-unsigned.apk` 8.0MB，SHA-256 `cf32651a…`；versionCode 2 / versionName 1.0.1-ci；apksigner `DOES NOT VERIFY`（符合 unsigned） |
+| `sign_release=true`，未配置 Secrets | [41215119074](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41215119074) | 22s 失败；逐项报四个 `RELEASE_*` Secret 未配置；未静默产出 unsigned 包 |
+
+正式签名路径仍需用户配置四个 Secrets（keystore 由用户保管）；本仓库不保存密钥。
+
+定时采集观察：最后自动 `schedule` 为 2026-10-31T13:31:47Z（run 41205967508）；此后
+14:01 / 14:31 / 15:01 / 15:31Z 均未出现。23:31 手动触发
+[run 41215240730](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41215240730)
+刷新快照；`schedule` 长期可靠性仍待观察，不把 30 分钟当 SLA。
+
+详细记录：`p2-alert-drill.txt`、`p2-release-workflow.txt`。
+
 ## 未验证
 
-- **失败告警注入未执行**：P1 远端健康运行已验证部署后哈希、Android job、恢复关闭 job 与 health workflow；`notify-failure` 的失败建 Issue 路径尚未通过故意失败演练。
-- 定时 `schedule` 的下一次自动触发（此前为手动 workflow_dispatch；页面与发布链路已真实执行）。
-- Release 签名、应用发布 CI。
+- **真实 stale 事故未发生**：告警演练使用手动 1s 阈值；定时 `schedule` 的长期稳定性仍待观察。
+- **正式签名 Release 未构建**：四个签名 Secrets 尚未配置；只验证了 unsigned 与缺密钥失败关闭。
 - API 26–36、其他 ROM、通知渠道/省电 soak。

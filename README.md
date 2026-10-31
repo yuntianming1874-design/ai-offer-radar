@@ -22,12 +22,12 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
 | 阶段 11（设备端到端验收与交付） | 已完成：手工验收 1–8 已在 OPD2515 执行并归档（2026-10-30 22:19–22:32），127 JVM / 84 设备测试 |
 | 阶段 12（GLM Coding Plan 官方源纵向切片） | 已完成：134 JVM / 22 suites；86 / 86 设备测试通过；官方模式真机验收已归档（2026-10-31 00:13） |
 | 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 已完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions + Pages 已启用，远程 workflow 成功发布 3 products / 9 offers |
-| 阶段 12 增强 P1（CI 自证端到端） | 已完成远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests；run 41182662449 成功；失败 Issue 路径未注入演练 |
-| P2（失败告警演练 + Release 签名骨架） | 进行中：health workflow 支持手动阈值、`release.yml` + 条件 signingConfig 已落地；正式 keystore 未配置，远端演练/签名构建待验证 |
+| 阶段 12 增强 P1（CI 自证端到端） | 已完成远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests；run 41182662449 成功；P2 已补失败路径演练 |
+| P2（失败告警演练 + Release 签名骨架） | 失败告警演练已完成（Issue #1 创建/去重/恢复关闭、失败 run 置红）；unsigned Release workflow 远端成功；正式 keystore 未配置，签名包待用户提供密钥 |
 
 当前是可构建、可安装、可测试的开发版本，不是生产版本。
 
-最近一次验证（2026-10-31 16:02，阶段 12 增强 P1 本地 + 远端首跑）：
+最近一次验证（2026-10-31 23:30，阶段 12 增强 P2 远端演练）：
 
 - `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest`：`BUILD SUCCESSFUL`，56s，84 tasks
 - JVM 单元测试：**137 / 137**（23 suites）
@@ -39,7 +39,8 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
   - 阶段 11 历史设备基线：84 / 84（2026-10-30 22:34）
 - Release endpoint：不传 property 时 `GLM_COLLECTOR_URL=""`（官方模式明确失败关闭）；传 `-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 后 BuildConfig 与 APK 构建均通过
 - CI 定时采集：`.github/workflows/glm-collector.yml` 已在 GitHub Actions 真实运行成功（[run 41180172626](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41180172626)）；Pages 快照 <https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json> 经 `validate-payload.mjs` 校验通过（3 products / 3 plans / 9 offers）
-- CI 自证（P1）：部署后由 `verify-published.mjs` 重拉线上 JSON，HTTP/schema/2h 新鲜度通过且字节 SHA-256 必须等于本次 artifact；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建；失败自动开 Issue（失败注入未演练），`glm-snapshot-health.yml` 每小时检查 2 小时新鲜度
+- CI 自证（P1）：部署后由 `verify-published.mjs` 重拉线上 JSON，HTTP/schema/2h 新鲜度通过且字节 SHA-256 必须等于本次 artifact；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建；失败自动开 Issue，`glm-snapshot-health.yml` 每小时检查 2 小时新鲜度
+- P2 远端演练：`max_age_seconds=1` 创建 Issue #1，重复失败去重且 run 置红，恢复后评论并关闭；`release.yml` 的 unsigned 构建成功（versionCode 2 / 1.0.1-ci，[run 41214833322](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214833322)）；`sign_release=true` 缺 Secrets 时 22s 失败关闭（[run 41215119074](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41215119074)）
 - 阶段 12 官方模式真机验收：GLM Lite/Pro/Max × 月/季/年；Lite 年付首页 `¥991.20/年`、折合 `¥82.60`；Lite 季付详情总价 `¥283.20`、折合 `¥94.40`；采集器停止后失败原因与缓存保留；切回演示不混数据
 - 阶段 12 明细：[docs/PHASE12_PROGRESS.md](docs/PHASE12_PROGRESS.md)
 - 阶段 11 手工验收：**已执行**（22:19–22:32），证据见 [docs/PHASE11_DEVICE_ACCEPTANCE.md](docs/PHASE11_DEVICE_ACCEPTANCE.md) 与 `docs/evidence/2026-10-30/phase11/device-manual/`
@@ -375,8 +376,8 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 - FCM 未接入；`NoOpPushNotificationService` 只证明边界存在。
 - WorkManager 周期任务不保证实时；设备休眠/厂商策略会延迟。
 - 通知 `SENT` 表示已提交给系统，不保证用户实际看到；渠道被关闭时事件保持 `PENDING`。
-- Release 签名/发布 CI 骨架已就绪（`.github/workflows/release.yml` + 条件 signingConfig），但正式 keystore 尚未配置，没有产出可分发签名包；`build-android` 产物仍是 CI 临时 key 签名的 helper APK。Play 发布配置、混淆策略仍未实现。
-- P1 的部署后哈希校验、Android job 与健康路径已在远端通过；失败 Issue 路径和 P2 签名 workflow 仍待远端演练（见 `docs/evidence/2026-10-31/`）。
+- Release 签名/发布 CI 骨架已就绪（`.github/workflows/release.yml` + 条件 signingConfig）；unsigned 远端构建与缺密钥失败关闭已验证。正式 keystore 尚未配置，没有产出可分发签名包；`build-android` 产物仍是 CI 临时 key 签名的 helper APK。Play 发布配置、混淆策略仍未实现。
+- P1 的部署后哈希校验、Android job 与健康路径已在远端通过；P2 已实测失败 Issue 的创建/去重/恢复关闭与失败 run 置红。真实 stale 事故和定时 schedule 长期稳定性仍未观察（见 `docs/evidence/2026-10-31/`）。
 - 深链在“已有 saved state 且系统用全新 intent 重建 Activity”的罕见路径未覆盖。
 - 同一比较分组存在多个优惠时，“当前观测”用同金额最新快照近似；演示数据没有这种组合。
 - Lint 仍有 2 个 warning：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
@@ -384,7 +385,7 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 
 ## 下一步建议
 
-1. 完成 P2 远端演练：用 `max_age_seconds=1` 触发 health 失败并确认 Issue 去重/关闭；用 `sign_release=false` 先验证 `release.yml`，再配置正式 keystore 构建签名包。
+1. 配置正式 release keystore 的四个 GitHub Secrets，跑通 `release.yml` 的签名路径；随后做 API 26–36 兼容矩阵与长期 schedule soak。
 2. 扩大设备矩阵：在 API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak 下复跑阶段 11/12 验收。
 3. 发布前：正式签名、Play 配置、WorkManager soak、真实设备长期运行、通知渠道/权限全矩阵。
 4. 交接给下一位开发者时先读 [docs/HANDOFF.md](docs/HANDOFF.md)。

@@ -56,10 +56,14 @@ GitHub Actions（每 30 分钟）
   Pages 一直返回旧文件，健康检查会以 2 小时为阈值失败。
 - 失败时开/更新 Issue `GLM snapshot is stale (>2h)`；恢复后自动关闭。
 - 这样即使“最后一次成功超过 2 小时”而没有新的失败 run，也会被发现。
-- 手动演练：`workflow_dispatch` 可传 `max_age_seconds=1`，在不等待两小时的情况下
-  触发失败路径，确认 Issue 创建、1 小时内去重；随后用默认 `7200` 重跑，确认
-  Issue 被评论并关闭。演练 run 与 Issue 链接要写入 evidence，不能把“健康运行”
-  当作失败告警已测试。
+- 手动演练（2026-10-31 已执行）：`workflow_dispatch` 传 `max_age_seconds=1` 触发失败，
+  创建 [Issue #1](https://github.com/yuntianming1874-design/ai-offer-radar/issues/1)（run
+  [41214658712](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214658712)）；
+  再次失败会复用 Issue、1 小时内不重复评论，并因 `Fail the run after filing the alert`
+  使 run 置红（run [41214743795](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214743795)）；
+  默认 `7200` 重跑会评论并关闭 Issue（run
+  [41214800226](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214800226)）。
+  演练 run 与 Issue 链接已写入 evidence；这是手动阈值演练，不是真实 stale 事故。
 
 ## 为什么需要线上字节哈希
 
@@ -183,11 +187,15 @@ node tools/glm-collector/verify-published.mjs \
   `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK
   `8783870e…`；`close-recovered-issue` 成功，`notify-failure` 健康时跳过。
   `glm-snapshot-health` [run 41182665177](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182665177)
-  7s 成功。失败建 Issue 的注入路径尚未演练。
+  7s 成功。P2 失败路径演练已执行：`max_age_seconds=1` 创建 Issue #1
+  （run 41214658712）；重复失败去重并将 run 置红（run 41214743795）；默认
+  7200 恢复并关闭 Issue（run 41214800226）。
 
 ## 已知限制
 
-- GitHub 的 `schedule` 可能延迟；30 分钟是期望值，不是 SLA。
+- GitHub 的 `schedule` 可能延迟；30 分钟是期望值，不是 SLA。2026-10-31
+  观察到 13:31Z 自动运行后，14:01/14:31/15:01/15:31Z 连续未出现，需手动刷新
+  并继续监控；health workflow 的 2 小时阈值是兜底，不是定时器保证。
 - GitHub Pages 需要仓库为 public 或付费计划；免费账号对 private 仓库会返回
   “Your current plan does not support GitHub Pages for this repository”。
   本项目已改为 public，代码与证据已脱敏。
