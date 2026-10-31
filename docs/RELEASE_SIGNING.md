@@ -71,8 +71,13 @@ workflow 会：
   `apksigner` 显示 `DOES NOT VERIFY`（符合 unsigned）。
 - 已验证：`sign_release=true` 但四个 Secrets 未配置时，workflow 在构建前
   22s 失败，并逐项报告缺失的 Secret；不会静默产出 unsigned 包。
-- **未验证**：使用真实 release keystore 的远端签名构建、`apksigner verify --print-certs`
-  和真机安装。keystore 由仓库所有者生成并保管，不进入仓库。
+- 已验证（2026-10-31 23:40–23:48，本机）：使用新生成的 release key 构建
+  versionCode 1 / versionName 1.0.0；v2 签名通过，证书 SHA-256
+  `54f6ee32cb7a7d28ed89e5ea131f1e134904b4eeb97dad7b02f238260d19979e`；
+  APK SHA-256 `376be6952ccb984b72e197646ce1ceb48c16d085b3b4fc905cf82d3c47dbca36`；
+  已安装到 PMX110 / Android 17，官方模式通过线上 endpoint 成功同步。
+- **未验证**：把当前 release key 写入 GitHub Actions Secrets 后的远端签名构建。
+  Secrets 尚未配置；keystore 只在本机，不进入仓库。
 
 ## 4. 本地签名构建
 
