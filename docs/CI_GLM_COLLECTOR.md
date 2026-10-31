@@ -104,7 +104,7 @@ node tools/glm-collector/validate-payload.mjs \
 - 设备：`connectedDebugAndroidTest` **86 / 86**（OPD2515 / API 37，1m 8s）；
 - Release 无 property：`GLM_COLLECTOR_URL=""`；注入 property：BuildConfig 为注入 URL，两次 `assembleRelease` 均通过；
 - workflow YAML 经 Ruby Psych 解析通过（1 job / 9 steps），index 生成脚本本地模拟成功；
-- **未在 GitHub 远端执行**：远程仓库与 Pages 尚未配置。
+- **未在 GitHub 远端执行**：私有仓库已创建并推送，但 Pages 尚未启用。
 
 ## 已知限制
 

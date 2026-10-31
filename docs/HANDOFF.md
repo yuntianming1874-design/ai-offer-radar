@@ -1,7 +1,7 @@
 # AI 优惠雷达：开发者交接文档
 
 更新时间：2026-10-31
-交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源，86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成；随后补充了 **endpoint 构建时配置 + GitHub Actions 定时采集**（远程仓库/Pages 尚未启用）。
+交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源，86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成；随后补充了 **endpoint 构建时配置 + GitHub Actions 定时采集**（远程仓库已推送，Pages 尚未启用）。
 
 ## 一句话状态
 
@@ -194,7 +194,7 @@
   - 远程/CI 构建示例：`./gradlew assembleRelease -PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json`。
 - `.github/workflows/glm-collector.yml`：每 30 分钟 + 手动触发；Node 24 + Chrome；先跑采集器/校验器测试，再真实采集，`validate-payload.mjs` 校验 3×3=9、来源、金额、新鲜度，最后发布到 GitHub Pages。
 - `tools/glm-collector/validate.mjs` / `validate-payload.mjs`：严格校验；CI 失败时不覆盖上一版；App 端 2 小时新鲜度兜底。
-- 远程仓库与 GitHub Pages 尚未配置，因此 workflow **已实现但未在真实远端执行**；本地可复现命令见 `docs/CI_GLM_COLLECTOR.md`。
+- 远程仓库已创建并推送，GitHub Pages 尚未启用，因此 workflow **已实现但未在真实远端执行**；本地可复现命令见 `docs/CI_GLM_COLLECTOR.md`。
 - 复跑结果（2026-10-31 00:53）：clean 构建 56s / 84 tasks；JVM **137 / 137（23 suites）**；Lint 0 errors / 2 warnings；`connectedDebugAndroidTest` **86 / 86**（1m 8s）；采集器测试 **10 / 10**；Release 空 endpoint 与注入 endpoint 均构建成功并核对 BuildConfig。
 - 新增测试：`GlmCodingPlanRemoteDataSourceTest` 的空 endpoint/过期 payload，`BuildConfigTest`；采集器 `validate.test.mjs` 5 个校验 + 1 个 CLI 失败关闭测试。
 
@@ -302,7 +302,7 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 
 ## 已知限制
 
-1. **官方源依赖本机/CI 采集层**：Debug 的 GLM Coding Plan 走 `tools/glm-collector` + headless Chrome + `adb reverse`；Release/CI 路径已实现为 HTTPS Pages 快照，但远程仓库/Pages 尚未启用，所以还没有真实生产数据服务。页面选择器改版会采集失败；不覆盖团队套餐、登录优惠、优惠券。
+1. **官方源依赖本机/CI 采集层**：Debug 的 GLM Coding Plan 走 `tools/glm-collector` + headless Chrome + `adb reverse`；Release/CI 路径已实现为 HTTPS Pages 快照，但 GitHub Pages 尚未启用，所以还没有真实生产数据服务。页面选择器改版会采集失败；不覆盖团队套餐、登录优惠、优惠券。
 2. **设备矩阵有限**：阶段 12 在 OPD2515 / API 37 上通过 86 / 86，阶段 11 历史基线 84 / 84；API 26–36、其他 ROM、通知渠道关闭、厂商省电策略和长期 soak 仍属未验证。
 3. **没有后端/账号/支付**；“去订阅”只是打开官网入口，不完成购买。
 4. **FCM 未接入**：`NoOpPushNotificationService` 只是边界。
@@ -312,13 +312,13 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 8. **历史最低近似**：同组多优惠同价时用“同金额最新快照”近似当前观测；演示数据不覆盖该组合。
 9. **发布能力缺失**：没有 release 签名、应用发布 CI、Play 配置、混淆策略；`release` 未开启 minify。GLM 采集 workflow 已实现，但尚未在 GitHub 远端执行。
 10. **Lint 仍有 2 个 warning**：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
-11. **版本管理**：已初始化 git 仓库（`main`），阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到本地 `main`（标签 `phase12-glm-source`）；远程仓库尚未配置。阶段 12 增强（endpoint + CI）已提交到本地 `main`（标签 `phase12-endpoint-ci`），远程仓库待推送；后续请新建 commit/分支，不要覆盖既有基线标签。
+11. **版本管理**：已初始化 git 仓库（`main`），阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到本地 `main`（标签 `phase12-glm-source`）；远程仓库为 `https://github.com/yuntianming1874-design/ai-offer-radar`（private），`main` 与 `phase11-accepted`、`phase12-glm-source`、`phase12-endpoint-ci` 三个标签均已推送。阶段 12 增强（endpoint + CI）已提交到 `main`；后续请新建 commit/分支，不要覆盖既有基线标签。
 12. **文档历史**：`PHASE6_PROGRESS.md` 和旧版 `PHASE8_PROGRESS.md` 曾出现不可复核的完成声明；以根 README、阶段 8–12 文档和 evidence XML 为准。阶段 11 手工项与“仅自动化覆盖/未验证”项必须分开，不得混写成全部通过；阶段 12 的 86 项设备测试已完成并归档，引用时以 `phase12-connected-test-results.xml` 为准；阶段 12 增强引用 `evidence/2026-10-31/README.md`。
 
 ## 建议的下一步
 
 1. **启用远程 CI 与 Pages**
-   - 配置私有远程仓库，推送 `main` 与标签；在 Settings → Pages 选择 GitHub Actions。
+   - 在已推送的私有仓库 Settings → Pages 选择 GitHub Actions，启用 Pages。
    - 手动跑一次 `GLM Coding Plan collector`，确认 `glm-coding-plan.json` 可访问；用 `-PglmCollectorUrl=https://<owner>.github.io/<repo>/glm-coding-plan.json` 构建 Release。
    - 手机仅用蜂窝网络验收官方模式：成功同步、快照过期拒绝、断网缓存不冒充实时。
 
@@ -346,7 +346,7 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 - [x] `connectedDebugAndroidTest` 通过（2026-10-31：86 / 86，OPD2515 / API 37，1m 8s）
 - [x] `node --test tools/glm-collector/test/*.test.mjs` 通过（10 / 10）
 - [x] Release 空 endpoint 构建通过，BuildConfig 为空；注入 `-PglmCollectorUrl` 后 BuildConfig 正确
-- [ ] GitHub 远程仓库/Pages/定时 workflow 真实执行
+- [ ] GitHub Pages/定时 workflow 真实执行（仓库已推送，Pages 待启用）
 - [x] 首装首页有“演示数据，非实时优惠”，状态卡显示“数据来源：演示数据”
 - [x] 设置页切到“官方数据”显示官方已配置说明与采集器提示；采集器未运行时同步失败并显示原因
 - [x] 设置页切回“演示数据”，产品恢复且来源仍标“演示数据”

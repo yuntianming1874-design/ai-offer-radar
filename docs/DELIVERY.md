@@ -16,7 +16,7 @@
 | 设备自动化测试 | **86 / 86**（2026-10-31 00:52，OPD2515 / API 37，1m 8s）；阶段 11 历史基线 84 / 84 |
 | 采集器 Node 测试 | **10 / 10**（payload 4 + 校验/CLI 6） |
 | Release endpoint | 无 property 时为空（失败关闭）；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时构建成功并正确注入 |
-| CI 定时采集 | workflow 已实现并本地校验；**GitHub 远程仓库/Pages 未配置，未真实运行** |
+| CI 定时采集 | workflow 已实现并本地校验；**远程仓库已推送；Pages 未启用，未真实运行** |
 | 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
 | 阶段 12 GLM 官方源 | **已完成真机验收**：官方同步、3 产品 × 3 周期、季付总价/月均、失败缓存态、切回演示隔离；证据见 `docs/evidence/2026-10-30/phase12/device-manual/` |
 | 交付说明 | 已完成（本文件） |
@@ -40,7 +40,7 @@
 - 新鲜度：`GlmCodingPlanRemoteDataSource` 拒绝超过 2 小时的快照，也拒绝晚于当前时间 5 分钟的时间戳；endpoint 为空时不发起网络。
 - CI：`.github/workflows/glm-collector.yml` 每 30 分钟运行，Node 24 + Chrome，采集后 `validate-payload.mjs` 校验，发布到 GitHub Pages；校验失败不发布。
 - 本地验证：Node 10/10；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过。
-- **未启用**：远程仓库与 Pages 尚未配置，workflow 未在 GitHub 真实运行；需要先建私有远程仓库、启用 Pages、配置分支保护，再用 `-PglmCollectorUrl` 构建 Release。
+- **未启用**：私有远程仓库已创建并推送，但 Pages 尚未启用，workflow 未在 GitHub 真实运行；下一步在仓库 Settings → Pages 启用 GitHub Actions，再用 `-PglmCollectorUrl` 构建 Release。
 - 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md)。
 
 ## 2. 构建、运行和测试
@@ -315,7 +315,7 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 
 ### 其他缺口
 
-- Debug 官方 GLM 源依赖开发机上的 Node/Chrome 采集器；CI/Pages 定时采集 pipeline 已实现，但远程仓库与 Pages 尚未启用，也不是可部署的生产后端；没有采集监控/告警。
+- Debug 官方 GLM 源依赖开发机上的 Node/Chrome 采集器；CI/Pages 定时采集 pipeline 已实现，远程仓库已推送但 Pages 尚未启用，也不是可部署的生产后端；没有采集监控/告警。
 - 没有后端、账号、支付、真实订阅或价格校验。
 - 没有 release 签名、应用发布 CI、Play 配置、混淆策略（GLM 采集 workflow 已实现，待远端启用）。
 - 设备矩阵只验证过 OPD2515 / API 37；阶段 12 的 86 项设备测试已在该设备通过，但 API 26–36/其他 ROM 仍属未验证。

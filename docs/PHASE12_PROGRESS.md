@@ -6,7 +6,7 @@
 
 > 2026-10-31 00:53 增强：endpoint 已改为构建时注入（Debug 本机 / Release CI HTTPS），
 > GitHub Actions 定时采集 workflow 已实现并本地校验；JVM 137/137、设备 86/86、Node 10/10。
-> 远程仓库与 Pages 尚未配置，workflow 未在真实远端运行。详见文末“阶段 12 增强”。
+> 远程仓库已创建并推送，Pages 尚未启用，workflow 未在真实远端运行。详见文末“阶段 12 增强”。
 
 ## 目标与结论
 
@@ -180,13 +180,13 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
   - 设备 `connectedDebugAndroidTest` **86 / 86**（1m 8s）；
   - Release 无 property / 注入 property 两种构建均成功，BuildConfig 分别为空 / 注入值。
 - 未验证：
-  - 远程仓库与 GitHub Pages 未配置，workflow 未在 GitHub 真实运行；
+  - 远程仓库已创建并推送，GitHub Pages 未启用，workflow 未在 GitHub 真实运行；
   - Release 未签名，CI 采集依赖 public 页面选择器与 Chrome 可用性。
 - 证据：`docs/evidence/2026-10-31/phase12-endpoint-ci/`；命令与 CI 配置见 `docs/CI_GLM_COLLECTOR.md`。
 
 ## 已知限制
 
-- Debug 采集器依赖开发机 Chrome；CI/Release 路径已实现但尚未启用远程仓库/Pages。
+- Debug 采集器依赖开发机 Chrome；CI/Release 路径已实现；远程仓库已推送，Pages 尚未启用。
 - 官方页面改版、CSS 选择器变化、网络/Chrome 故障都会导致采集失败；失败时返回 503，
   App 显示错误，不显示旧价。
 - 只抓个人套餐的公开价格，不抓团队套餐、登录后优惠、优惠券、首月立减。
@@ -198,7 +198,7 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 
 ## 下一步
 
-1. 配置私有远程仓库与 GitHub Pages，真实跑通定时采集，并用 `-PglmCollectorUrl` 注入 Release endpoint。
+1. 在已推送的私有仓库启用 GitHub Pages，真实跑通定时采集，并用 `-PglmCollectorUrl` 注入 Release endpoint。
 2. 为采集器增加 selector 漂移/抓取失败告警与“上次成功快照”健康检查；保持 provenance。
 3. 再扩展第二个产品，仍按“单产品、单来源、可审计”推进。
 4. 扩大设备矩阵：API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak。
