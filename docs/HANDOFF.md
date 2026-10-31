@@ -1,7 +1,7 @@
 # AI 优惠雷达：开发者交接文档
 
 更新时间：2026-10-31
-交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源，86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成；随后补充了 **endpoint 构建时配置 + GitHub Actions 定时采集**（公开仓库已推送，Pages 已启用，workflow 已真实运行成功）。
+交接范围：阶段 0–12 的代码、自动化验收与交付文档；阶段 11 手工设备验收 1–8 已于 2026-10-30 22:19–22:32 在 OPD2515 执行并归档；阶段 12 已接入第一条真实 GLM Coding Plan 官方源，86 项仪器测试与真机官方模式验收已于 2026-10-31 00:10–00:13 完成；随后补充了 **endpoint 构建时配置 + GitHub Actions 定时采集**（公开仓库已推送，Pages 已启用，workflow 已真实运行成功）；P1 又加入了**部署后线上字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警**（本地验证完成，远端首跑待执行）。
 
 ## 一句话状态
 
@@ -14,6 +14,7 @@
 阶段 9/10/11/12 验证设备：OPD2515，Android 17 / API 37，adb 序列号 `<device-serial>`。2026-10-30 22:34 clean 后阶段 11 `connectedDebugAndroidTest` 通过：**84 / 84**（1m 6s）；阶段 11 手工验收 1–8 已于 22:19–22:32 执行，证据在 `docs/evidence/2026-10-30/phase11/device-manual/`。
 2026-10-31 00:13 阶段 12 `connectedDebugAndroidTest` 通过：**86 / 86**，0 failed / 0 errors / 0 skipped（1m 5s）；官方模式真机同步、季付总价/月均、采集器失败缓存态与切回演示隔离均已验收，证据在 `docs/evidence/2026-10-30/phase12/device-manual/`。
 2026-10-31 00:53 阶段 12 增强（endpoint + CI）复跑：clean 56s / 84 tasks；JVM **137 / 137（23 suites）**；Lint 0 errors / 2 warnings；`connectedDebugAndroidTest` **86 / 86**（1m 8s）；采集器 Node 测试 **10 / 10**；Release endpoint 两种构建均通过。
+2026-10-31 15:48 P1 本地验证：Node **15 / 15**；线上 `verify-published.mjs` 通过（3 档 / 9 offers，SHA-256 `5e7aebdc…`）；`testDebugUnitTest assembleRelease` 33s / 76 tasks；JVM **137 / 137**；helper APK 签名脚本通过；两个 workflow YAML 解析通过。**尚未在 GitHub 远端执行 P1 工作流。**
 
 | 项目 | 结果 |
 |---|---|
@@ -21,7 +22,8 @@
 | JVM 单元测试 | 137 / 137，0 failed / 0 errors / 0 skipped（23 suites） |
 | 设备仪器测试 | 阶段 12 **86 / 86 通过**（2026-10-31 00:52，1m 8s）；阶段 11 历史基线 84 / 84 |
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
-| 采集器测试 | 10 / 10（4 payload + 6 校验/CLI） |
+| 采集器/发布校验测试 | 15 / 15（4 payload + 6 校验/CLI + 5 发布端点校验） |
+| P1 CI 自证 | 本地通过：部署后 HTTP/2h/SHA-256、Android build job、Issue 告警；**远端首跑待执行** |
 | Release endpoint | 无 property 时 `GLM_COLLECTOR_URL=""`；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时 BuildConfig 正确注入，`assembleRelease` 通过 |
 | 阶段 8/9/10/11 证据 | `docs/evidence/2026-10-30/` |
 | 阶段 12 证据 | `docs/evidence/2026-10-30/phase12/` |
@@ -198,6 +200,19 @@
 - 复跑结果（2026-10-31 00:53）：clean 构建 56s / 84 tasks；JVM **137 / 137（23 suites）**；Lint 0 errors / 2 warnings；`connectedDebugAndroidTest` **86 / 86**（1m 8s）；采集器测试 **10 / 10**；Release 空 endpoint 与注入 endpoint 均构建成功并核对 BuildConfig。
 - 新增测试：`GlmCodingPlanRemoteDataSourceTest` 的空 endpoint/过期 payload，`BuildConfigTest`；采集器 `validate.test.mjs` 5 个校验 + 1 个 CLI 失败关闭测试。
 
+### 阶段 12 增强 P1：CI 自证端到端
+
+- `tools/glm-collector/verify-published.mjs`：部署后重拉公网 JSON；HTTP 非 2xx、非法 JSON、schema/过期/未来时间失败、线上字节 SHA-256 与 CI 产物不一致都会重试（默认 12 次 × 5 秒），最终失败。
+- `tools/glm-collector/test/verify-published.test.mjs`：5 个测试（哈希匹配、404 重试、过期、哈希不一致、CLI 本地 HTTP 服务）；采集器 Node 测试总数 **15 / 15**。
+- `.github/workflows/glm-collector.yml`：
+  - `collect-and-publish` 记录 payload SHA-256，Pages deploy 后由 `verify-published.mjs` 校验，成功后才算发布完成；
+  - 新增 `build-android`：用上一步的线上 endpoint 跑 `testDebugUnitTest assembleRelease`，核对 BuildConfig，用一次性 CI key 签 helper APK（手动触发时上传 artifact）；
+  - `notify-failure` / `close-recovered-issue`：失败开/更新 Issue `GLM collector CI failed`，恢复后关闭；同一 Issue 1 小时内不重复评论。
+- `.github/workflows/glm-snapshot-health.yml`：每小时检查线上快照是否超过 2 小时；失败开/更新 `GLM snapshot is stale (>2h)`，恢复后关闭。
+- 本地验证（2026-10-31 15:48）：Node **15 / 15**；线上 `verify-published` 通过（3 档 / 9 offers，SHA-256 `5e7aebdc528862abdd2dfc6341f10cd1d7da3276b680efb6c17a1feff3a5ac03`）；`testDebugUnitTest assembleRelease` 33s / 76 tasks；JVM 137 / 137；helper APK 签名脚本通过；两个 YAML 解析通过。
+- **远端 P1 首跑待执行**：推送后需手动触发 `GLM Coding Plan collector`，确认 4 个 job 与 `glm-snapshot-health` 的真实结果；不能把本地验证写成远端通过。
+- 限制：`build-android` 的 APK 是 CI 临时 key 签名的 helper，不是正式 release 签名；Issue 告警依赖 `issues: write` 与仓库 Issue 功能；工作流不会发邮件/Slack。
+
 
 ## 代码地图
 
@@ -225,8 +240,9 @@ app/src/main/java/com/aioffer/radar/
 ├── feature/                       Home / Settings / Detail / Statistics
 └── navigation/                    Compose 路由（含 settings）与深链
 
-tools/glm-collector/               GLM 官方套餐页本机/CI 渲染采集器（Node + Chrome CDP）+ payload 校验
-.github/workflows/glm-collector.yml 定时采集、校验并发布到 GitHub Pages
+tools/glm-collector/               GLM 官方套餐页本机/CI 渲染采集器（Node + Chrome CDP）+ payload/发布校验
+.github/workflows/glm-collector.yml 定时采集、校验、发布并自证线上字节
+.github/workflows/glm-snapshot-health.yml 每小时检查线上快照 2 小时新鲜度
 app/src/androidTest/assets/        真实采集 JSON fixture
 ```
 
@@ -310,17 +326,17 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 6. **通知权限/渠道边界**：拒绝或渠道关闭时事件保留 PENDING；恢复后补发；没有长期 soak。
 7. **深链罕见路径**：已有 saved state 且系统用全新 intent 重建 Activity 时，启动 intent 会被跳过；常规冷启动/热启动/旋转已覆盖。
 8. **历史最低近似**：同组多优惠同价时用“同金额最新快照”近似当前观测；演示数据不覆盖该组合。
-9. **发布能力缺失**：没有 release 签名、应用发布 CI、Play 配置、混淆策略；`release` 未开启 minify。GLM 采集 workflow 已在 GitHub 远端执行成功，Pages 每 30 分钟更新快照。
+9. **发布能力缺失**：没有 release 签名、应用发布 CI、Play 配置、混淆策略；`release` 未开启 minify。GLM 采集 workflow 已在 GitHub 远端执行成功，Pages 每 30 分钟更新快照。P1 的 `build-android` 用一次性 CI key 签 helper APK，不是正式发布签名；P1 的部署后哈希、Android job 与 Issue 告警目前只完成本地验证，远端首跑待执行。
 10. **Lint 仍有 2 个 warning**：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
 11. **版本管理**：已初始化 git 仓库（`main`），阶段 11 验收基线为标签 `phase11-accepted`，阶段 12 已完成并提交到本地 `main`（标签 `phase12-glm-source`）；远程仓库为 `https://github.com/yuntianming1874-design/ai-offer-radar`（public，已脱敏），`main` 与 `phase11-accepted`、`phase12-glm-source`、`phase12-endpoint-ci` 三个标签均已推送。阶段 12 增强（endpoint + CI）已提交到 `main`；后续请新建 commit/分支，不要覆盖既有基线标签。
 12. **文档历史**：`PHASE6_PROGRESS.md` 和旧版 `PHASE8_PROGRESS.md` 曾出现不可复核的完成声明；以根 README、阶段 8–12 文档和 evidence XML 为准。阶段 11 手工项与“仅自动化覆盖/未验证”项必须分开，不得混写成全部通过；阶段 12 的 86 项设备测试已完成并归档，引用时以 `phase12-connected-test-results.xml` 为准；阶段 12 增强引用 `evidence/2026-10-31/README.md`。
 
 ## 建议的下一步
 
-1. **用已发布的 CI 快照验收 Release**
-   - Pages 已启用，workflow 已成功；快照地址 `https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json`。
-   - 用该地址构建 Release：`./gradlew assembleRelease -PglmCollectorUrl=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json`。
-   - 手机仅用蜂窝网络验收官方模式：成功同步、快照过期拒绝、断网缓存不冒充实时。
+1. **观察并验收 P1 CI 自证**
+   - 推送后手动触发 `GLM Coding Plan collector`，确认 `collect-and-publish` 的部署后哈希校验、`build-android`、失败/恢复 Issue job 真实通过。
+   - 手动触发 `GLM snapshot freshness`，确认 2 小时健康检查通过；可临时把阈值调低做失败告警演练。
+   - 再用 helper APK 或本地 debug-key 签名 Release 在蜂窝网络复验官方模式；正式签名仍属 P2。
 
 2. **扩大设备矩阵与长期 soak**
    - 在 API 26–36、其他 ROM、通知渠道关闭、厂商省电策略和长期运行下复跑 `docs/PHASE11_DEVICE_ACCEPTANCE.md` 的 1–8，并复跑阶段 12 官方模式。
@@ -344,7 +360,9 @@ export GRADLE_RO_DEP_CACHE="$HOME/.gradle/caches"
 - [x] `./gradlew clean assembleDebug testDebugUnitTest lintDebug` 通过（2026-10-31：137 JVM / 23 suites，0 failed）
 - [x] `assembleDebugAndroidTest` 编译通过；阶段 12 `connectedDebugAndroidTest` 已执行 86 / 86
 - [x] `connectedDebugAndroidTest` 通过（2026-10-31：86 / 86，OPD2515 / API 37，1m 8s）
-- [x] `node --test tools/glm-collector/test/*.test.mjs` 通过（10 / 10）
+- [x] `node --test tools/glm-collector/test/*.test.mjs` 通过（15 / 15）
+- [x] P1 本地：线上 `verify-published` 通过；Android Release job 等价命令通过；两个 workflow YAML 解析
+- [ ] P1 远端：手动触发后 `collect-and-publish` / `build-android` / 告警 job 与 `glm-snapshot-health` 真实通过
 - [x] Release 空 endpoint 构建通过，BuildConfig 为空；注入 `-PglmCollectorUrl` 后 BuildConfig 正确
 - [x] GitHub Pages/定时 workflow 真实执行（2026-10-31 15:27，run 41180172626 成功；快照 3 products / 9 offers）
 - [x] 首装首页有“演示数据，非实时优惠”，状态卡显示“数据来源：演示数据”

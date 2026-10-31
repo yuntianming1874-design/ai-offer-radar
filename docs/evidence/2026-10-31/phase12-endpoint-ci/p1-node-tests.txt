@@ -1,0 +1,23 @@
+✔ parses yuan text into minor units without floating point drift (1.64725ms)
+✔ builds three products, three plans and nine official offers (0.874458ms)
+✔ rejects a partial or out-of-order tab set (0.999958ms)
+✔ rejects missing tiers, missing prices and impossible discounts (0.461917ms)
+✔ accepts a fresh, complete official payload (2.461792ms)
+✔ rejects a payload older than the freshness window (2.206333ms)
+✔ rejects a payload fetched in the future (0.441625ms)
+✔ rejects an incomplete or duplicated offer set (0.268917ms)
+✔ rejects missing provenance or cross-source offers (0.190209ms)
+✔ CLI fails closed on stale data and accepts fresh data (64.647833ms)
+✔ accepts a fresh published payload whose bytes match the artifact (1.996667ms)
+✔ retries propagation failures before accepting the new snapshot (0.461083ms)
+✔ fails when the published payload is older than the freshness window (1.2625ms)
+✔ fails when the deployed bytes differ from the collected artifact (0.342292ms)
+✔ CLI verifies a locally served endpoint and reports counts (59.511458ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.8205

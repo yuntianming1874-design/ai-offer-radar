@@ -23,6 +23,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      endpoint_url: ${{ steps.endpoint.outputs.url }}
+      payload_sha256: ${{ steps.digest.outputs.sha256 }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -36,7 +39,7 @@ jobs:
         id: chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Test collector and payload validation
+      - name: Test collector, payload validation, and endpoint verification
         env:
           CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
         run: |
@@ -52,6 +55,13 @@ jobs:
           node tools/glm-collector/validate-payload.mjs \
             public/glm-coding-plan.json \
             --max-age-seconds 1800
+
+      - name: Record payload digest
+        id: digest
+        run: |
+          sha256=$(sha256sum public/glm-coding-plan.json | awk '{print $1}')
+          test -n "$sha256"
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
 
       - name: Add a minimal index
         run: |
@@ -85,3 +95,174 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Compute published endpoint
+        id: endpoint
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          test -n "$PAGE_URL"
+          echo "url=${PAGE_URL%/}/glm-coding-plan.json" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the deployed bytes and freshness
+        env:
+          ENDPOINT_URL: ${{ steps.endpoint.outputs.url }}
+          EXPECTED_SHA256: ${{ steps.digest.outputs.sha256 }}
+        run: |
+          test -n "$ENDPOINT_URL"
+          node tools/glm-collector/verify-published.mjs "$ENDPOINT_URL" \
+            --expected-sha256 "$EXPECTED_SHA256" \
+            --max-age-seconds 1800
+
+  build-android:
+    needs: collect-and-publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle caching
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug and release against the live endpoint
+        env:
+          GLM_COLLECTOR_URL: ${{ needs.collect-and-publish.outputs.endpoint_url }}
+        run: |
+          set -euo pipefail
+          test -n "$GLM_COLLECTOR_URL"
+          ./gradlew --no-daemon testDebugUnitTest assembleRelease \
+            -PglmCollectorUrl="$GLM_COLLECTOR_URL"
+          grep -F "$GLM_COLLECTOR_URL" \
+            app/build/generated/source/buildConfig/release/com/aioffer/radar/BuildConfig.java
+
+      - name: Sign a CI-only helper APK
+        run: |
+          set -euo pipefail
+          KEYSTORE="$RUNNER_TEMP/ci-helper.keystore"
+          keytool -genkeypair \
+            -keystore "$KEYSTORE" \
+            -storepass ci-helper-password \
+            -keypass ci-helper-password \
+            -alias ci-helper \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 3650 \
+            -dname "CN=AI Offer Radar CI Helper" \
+            -noprompt
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -n "$SDK_ROOT"
+          BUILD_TOOLS=$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          test -x "$BUILD_TOOLS/apksigner"
+          test -f app/build/outputs/apk/release/app-release-unsigned.apk
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$KEYSTORE" \
+            --ks-key-alias ci-helper \
+            --ks-pass pass:ci-helper-password \
+            --key-pass pass:ci-helper-password \
+            --out app/build/outputs/apk/release/app-release-ci-signed.apk \
+            app/build/outputs/apk/release/app-release-unsigned.apk
+          "$BUILD_TOOLS/apksigner" verify --verbose \
+            app/build/outputs/apk/release/app-release-ci-signed.apk
+          sha256sum app/build/outputs/apk/release/app-release-ci-signed.apk
+
+      - name: Upload CI helper APK
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-offer-radar-release-ci
+          path: app/build/outputs/apk/release/app-release-ci-signed.apk
+          retention-days: 3
+
+  notify-failure:
+    needs:
+      - collect-and-publish
+      - build-android
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Open or update the failure issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "GLM collector CI failed";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `CI run failed: ${runUrl}`,
+              "",
+              `Workflow: ${context.workflow}`,
+              `Event: ${context.eventName}`,
+              `Commit: ${context.sha}`
+            ].join("\n");
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100
+            });
+            const existing = issues.find((issue) => issue.title === title);
+            if (existing) {
+              const lastUpdate = new Date(existing.updated_at).getTime();
+              if (Date.now() - lastUpdate > 60 * 60 * 1000) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existing.number,
+                  body
+                });
+              }
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body
+              });
+            }
+
+  close-recovered-issue:
+    needs:
+      - collect-and-publish
+      - build-android
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Close the failure issue after a healthy run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "GLM collector CI failed";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100
+            });
+            const existing = issues.find((issue) => issue.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Recovered: a healthy run completed at ${runUrl}`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                state: "closed"
+              });
+            }

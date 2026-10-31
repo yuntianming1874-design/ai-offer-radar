@@ -13,7 +13,7 @@
 | JVM 单元测试 | 同上 | 137 / 137，23 suites，0 failed / 0 errors / 0 skipped |
 | Lint | 同上 | 0 errors，2 warnings |
 | 设备仪器测试 | `./gradlew --offline --no-daemon connectedDebugAndroidTest` | 86 / 86，0 failed / 0 errors / 0 skipped，1m 8s（00:52 最终复跑） |
-| Node 采集器测试 | `node --test tools/glm-collector/test/*.test.mjs` | 10 / 10 |
+| Node 采集器测试 | `node --test tools/glm-collector/test/*.test.mjs` | 10 / 10（P1 后 15 / 15） |
 | 真实采集 | `node tools/glm-collector/collector.mjs --once` | 3 tabs / 9 offers / 12s |
 | payload 校验 | `node tools/glm-collector/validate-payload.mjs ... --max-age-seconds 1800` | 通过（3 档 / 9 offers） |
 | Release（无 endpoint） | `./gradlew --offline --no-daemon assembleRelease` | `BUILD SUCCESSFUL`；`GLM_COLLECTOR_URL=""` |
@@ -47,9 +47,25 @@
 - `node-tests.txt`、`workflow-check.txt`
 - `release-buildconfig-empty.java` / `release-buildconfig-injected.java`
 - `remote-deployment.txt`：公开仓库 Pages 首次成功发布、run URL、HTTP 200 与线上 JSON 校验
+- `p1-node-tests.txt`：P1 后 Node 15 / 15
+- `p1-live-verification.txt`：线上 JSON 发布校验（3 档 / 9 offers、SHA-256）
+- `p1-workflow-check.txt`：两个 workflow 的 job 结构
+
+## P1 CI 自证（本地验证，2026-10-31 15:48）
+
+| 项目 | 命令/证据 | 结果 |
+|---|---|---|
+| 发布端点校验 | `node tools/glm-collector/verify-published.mjs <线上 JSON> --max-age-seconds 7200 --attempts 2` | 第 1 次通过；3 档 / 9 offers；SHA-256 `5e7aebdc…` |
+| Node 全量测试 | `node --test tools/glm-collector/test/*.test.mjs` | **15 / 15** 通过 |
+| Android Release job 等价构建 | `testDebugUnitTest assembleRelease -PglmCollectorUrl=<线上 URL>` | `BUILD SUCCESSFUL`，33s / 76 tasks；JVM 137 / 137；BuildConfig 含线上 URL |
+| helper APK 签名 | 临时 keytool + apksigner（本地模拟 CI 步骤） | 签名成功 |
+| Workflow 结构 | Ruby Psych 解析 | `glm-collector.yml`：`collect-and-publish` / `build-android` / `notify-failure` / `close-recovered-issue`；`glm-snapshot-health.yml`：`check-freshness` |
+
+P1 本地证据文件：`p1-node-tests.txt`、`p1-live-verification.txt`、`p1-workflow-check.txt`。
 
 ## 未验证
 
-- 定时 `schedule` 的下一次自动触发（本次为手动 workflow_dispatch；页面与发布链路已真实执行）。
+- **P1 远端首跑**：部署后哈希校验、Android job、Issue 创建/关闭、`glm-snapshot-health` 尚未在 GitHub 实际执行。
+- 定时 `schedule` 的下一次自动触发（此前为手动 workflow_dispatch；页面与发布链路已真实执行）。
 - Release 签名、应用发布 CI。
 - API 26–36、其他 ROM、通知渠道/省电 soak。

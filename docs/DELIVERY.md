@@ -1,6 +1,6 @@
 # AI 优惠雷达：交付说明
 
-更新时间：2026-10-31 15:30
+更新时间：2026-10-31 15:48
 适用版本：本地演示版 + GLM Coding Plan 官方源（`com.aioffer.radar`，版本号见 `app/build.gradle.kts`）
 交付结论：可构建、可安装、可测试；已接入**一条**真实 GLM 官方源，支持 Debug 本机采集器与 Release/CI HTTPS 快照；但**不是生产版本**，没有后端、账号、支付或 FCM；远程 CI/Pages 已启用并成功发布快照。
 
@@ -14,14 +14,15 @@
 | JVM 单元测试 | **137 / 137**，0 failed / 0 errors / 0 skipped（23 suites） |
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
 | 设备自动化测试 | **86 / 86**（2026-10-31 00:52，OPD2515 / API 37，1m 8s）；阶段 11 历史基线 84 / 84 |
-| 采集器 Node 测试 | **10 / 10**（payload 4 + 校验/CLI 6） |
+| 采集器/发布校验测试 | **15 / 15**（payload 4 + 校验/CLI 6 + 发布端点校验 5） |
+| P1 CI 自证（部署后哈希、Android job、Issue 告警） | **本地通过**：线上 `verify-published`、Android 等价构建、签名脚本、两个 YAML；**远端首跑待执行** |
 | Release endpoint | 无 property 时为空（失败关闭）；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时构建成功并正确注入 |
 | CI 定时采集 | **已在 GitHub Actions 真实运行成功**：run 41180172626；Pages 快照 3 products / 9 offers，JSON 校验通过 |
 | 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
 | 阶段 12 GLM 官方源 | **已完成真机验收**：官方同步、3 产品 × 3 周期、季付总价/月均、失败缓存态、切回演示隔离；证据见 `docs/evidence/2026-10-30/phase12/device-manual/` |
 | 交付说明 | 已完成（本文件） |
 
-阶段 12 的 JVM 134/134、采集器 4/4、Lint 0 errors / 2 warnings 和 86 项设备测试均已通过；阶段 12 增强后的最终复跑为 137 JVM、Node 10/10、设备 86/86。官方模式真机采集/同步与失败/隔离场景已执行。阶段 11 的构建、手工验收与文档已完成；部分无法在正常安装中自然制造的异常（非法 URL、无浏览器、数据库读取失败、清除记录）由仪器/单元测试覆盖，不能写成手工通过；详见 [PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md) 第 12 节。
+阶段 12 的 JVM 134/134、采集器 4/4、Lint 0 errors / 2 warnings 和 86 项设备测试均已通过；阶段 12 增强后的最终复跑为 137 JVM、Node 10/10、设备 86/86；P1 将 Node 测试增加到 15/15，并补充部署后线上哈希校验与 Android Release build job。官方模式真机采集/同步与失败/隔离场景已执行。阶段 11 的构建、手工验收与文档已完成；部分无法在正常安装中自然制造的异常（非法 URL、无浏览器、数据库读取失败、清除记录）由仪器/单元测试覆盖，不能写成手工通过；详见 [PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md) 第 12 节。
 
 ### 1.1 阶段 12 增量：GLM Coding Plan 官方源
 
@@ -39,9 +40,10 @@
 - endpoint：`BuildConfig.GLM_COLLECTOR_URL`；Debug 缺省本机 `http://127.0.0.1:8787/v1/glm-coding-plan`；Release 通过 `-PglmCollectorUrl=https://.../glm-coding-plan.json` 注入，未注入时官方模式明确“未配置”并失败关闭。
 - 新鲜度：`GlmCodingPlanRemoteDataSource` 拒绝超过 2 小时的快照，也拒绝晚于当前时间 5 分钟的时间戳；endpoint 为空时不发起网络。
 - CI：`.github/workflows/glm-collector.yml` 每 30 分钟运行，Node 24 + Chrome，采集后 `validate-payload.mjs` 校验，发布到 GitHub Pages；校验失败不发布。
-- 本地验证：Node 10/10；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过。
+- P1 CI 自证：deploy 后 `verify-published.mjs` 重新拉取线上 JSON，要求 HTTP 200、schema/2h 新鲜度通过且字节 SHA-256 等于 CI 产物；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建并签 helper APK；失败/2h 过期自动开 Issue，恢复后关闭。
+- 本地验证：Node **15/15**；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过；线上 `verify-published` 通过（SHA-256 `5e7aebdc…`）；Android Release job 等价命令 33s / 76 tasks；两个 YAML 解析通过。
 - **已启用**：公开远程仓库已推送；Pages 已启用；workflow 重跑成功（run 41180172626），快照 `https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json` 已发布并通过 `validate-payload.mjs` 校验。
-- 下一步：用该 HTTPS endpoint 构建 Release，并在真机蜂窝网络下验收官方模式、过期拒绝与断网缓存。
+- 下一步：推送 P1 并手动触发 workflow，确认部署后哈希、Android job、Issue 告警与 `glm-snapshot-health` 的真实结果；再进入正式签名/设备矩阵。
 - 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md)。
 
 ## 2. 构建、运行和测试

@@ -1,0 +1,2 @@
+.github/workflows/glm-collector.yml: jobs=collect-and-publish,build-android,notify-failure,close-recovered-issue
+.github/workflows/glm-snapshot-health.yml: jobs=check-freshness

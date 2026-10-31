@@ -1,11 +1,11 @@
 # 阶段 12：GLM Coding Plan 官方源纵向切片
 
 更新时间：2026-10-31
-状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 首次发布与 JSON 校验**
+状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 首次发布与 JSON 校验；P1 CI 自证本地完成，远端首跑待执行**
 范围：第一条真实官方数据源、`QUARTERLY` 计费周期、采集器、Android 适配器、endpoint/CI、测试与证据。
 
 > 2026-10-31 00:53 增强：endpoint 已改为构建时注入（Debug 本机 / Release CI HTTPS），
-> GitHub Actions 定时采集 workflow 已实现并在远端真实运行成功；JVM 137/137、设备 86/86、Node 10/10。
+> GitHub Actions 定时采集 workflow 已实现并在远端真实运行成功；JVM 137/137、设备 86/86、Node 10/10；P1 将 Node 增至 15/15（本地）。
 > 公开仓库已推送，Pages 已启用；快照 `https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json`
 > 已发布并通过 `validate-payload.mjs` 校验（3 products / 9 offers）。详见文末“阶段 12 增强”。
 
@@ -186,6 +186,18 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
   - 未验证：Release 签名、API 26–36/其他 ROM、长期定时运行的稳定性；CI 采集仍依赖公开页面选择器与 Chrome。
 - 证据：`docs/evidence/2026-10-31/phase12-endpoint-ci/`；命令与 CI 配置见 `docs/CI_GLM_COLLECTOR.md`。
 
+### P1：CI 自证端到端（2026-10-31，本地完成）
+
+- `tools/glm-collector/verify-published.mjs`：部署后重新 GET 公网 JSON；校验 HTTP 2xx、JSON/schema、2 小时新鲜度，并要求响应体 SHA-256 等于 CI 刚校验的 `public/glm-coding-plan.json`；失败按 12 次 × 5 秒重试。
+- `.github/workflows/glm-collector.yml`：
+  - `collect-and-publish` 记录 SHA-256，deploy 后执行发布校验；
+  - `build-android` 用 `needs.collect-and-publish.outputs.endpoint_url` 跑 `testDebugUnitTest assembleRelease`，grep BuildConfig，使用一次性 CI key 签 helper APK，手动触发时上传 artifact；
+  - `notify-failure` 失败开/更新 Issue `GLM collector CI failed`，`close-recovered-issue` 恢复后关闭。
+- `.github/workflows/glm-snapshot-health.yml`：每小时检查线上快照是否超过 2 小时，独立于采集 workflow；失败开/更新 `GLM snapshot is stale (>2h)`，恢复后关闭。
+- 测试：新增 `verify-published.test.mjs` 5 个测试；Node 总数 **15 / 15**。
+- 本地验证（15:48）：线上 `verify-published` 通过（3 档 / 9 offers，SHA-256 `5e7aebdc…`）；`testDebugUnitTest assembleRelease` 33s / 76 tasks，JVM 137/137；helper APK 签名脚本通过；两个 workflow YAML 解析通过。
+- **未完成**：P1 工作流尚未在 GitHub 远端首跑；Issue 告警、`build-android` 和 health workflow 的真实运行结果待验证，不能写成已通过。
+
 ## 已知限制
 
 - Debug 采集器依赖开发机 Chrome；CI/Release 路径已实现并已在 GitHub Pages 发布快照。
@@ -196,11 +208,11 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 官方套餐页没有匿名价格 API；在拿到正式授权/稳定接口前，不把采集器部署成公共服务。
 - 微博/小红书 robots 对通用爬虫 `Disallow: /`，不做自动抓取；B 站/社媒只能做
   **未验证线索**，不能进入价格库或触发通知。详见 `docs/DATA_SOURCE_INTEGRATION.md`。
-- API 26–36、其他 ROM、通知渠道/省电 soak、FCM、release/CI 仍未验证或未实现。
+- release 正式签名、API 26–36/其他 ROM、通知渠道/省电 soak、FCM 仍未验证或未实现；P1 workflow 的远端首跑待执行。
 
 ## 下一步
 
-1. 用已发布的 Pages endpoint 构建 Release，并在手机蜂窝网络下验收官方模式、快照过期拒绝和断网缓存。
-2. 为采集器增加 selector 漂移/抓取失败告警与“上次成功快照”健康检查；保持 provenance。
+1. 推送 P1 并手动触发 `glm-collector.yml` 与 `glm-snapshot-health.yml`，确认真实运行结果、Issue 创建/关闭和 Android job。
+2. 为采集器增加 selector 漂移回归与更明确的失败摘要（当前已有 workflow 失败/2h 健康 Issue）。
 3. 再扩展第二个产品，仍按“单产品、单来源、可审计”推进。
 4. 扩大设备矩阵：API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak。

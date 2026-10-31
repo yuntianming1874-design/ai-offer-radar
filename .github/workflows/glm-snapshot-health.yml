@@ -1,0 +1,109 @@
+name: GLM snapshot freshness
+
+on:
+  schedule:
+    # Independent of the collector workflow: if scheduled collection stops,
+    # this hourly check notices that the published snapshot is older than 2h.
+    - cron: "15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: glm-snapshot-health
+  cancel-in-progress: true
+
+jobs:
+  check-freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Verify the published snapshot is not older than 2 hours
+        id: check
+        continue-on-error: true
+        env:
+          ENDPOINT_URL: https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json
+        run: |
+          test -n "$ENDPOINT_URL"
+          node tools/glm-collector/verify-published.mjs "$ENDPOINT_URL" \
+            --max-age-seconds 7200 \
+            --attempts 3 \
+            --delay-ms 5000
+
+      - name: Open or update the stale-snapshot issue
+        if: steps.check.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "GLM snapshot is stale (>2h)";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `The published GLM snapshot failed the 2-hour freshness check: ${runUrl}`,
+              "",
+              "Endpoint: https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json",
+              "Likely causes: the collector workflow failed, GitHub Actions scheduled runs stopped, or Pages serves an old artifact."
+            ].join("\n");
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100
+            });
+            const existing = issues.find((issue) => issue.title === title);
+            if (existing) {
+              const lastUpdate = new Date(existing.updated_at).getTime();
+              if (Date.now() - lastUpdate > 60 * 60 * 1000) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existing.number,
+                  body
+                });
+              }
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body
+              });
+            }
+
+      - name: Close the stale-snapshot issue after recovery
+        if: steps.check.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "GLM snapshot is stale (>2h)";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100
+            });
+            const existing = issues.find((issue) => issue.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Recovered: the snapshot passed the 2-hour check at ${runUrl}`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                state: "closed"
+              });
+            }

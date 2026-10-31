@@ -1,6 +1,6 @@
 # GLM Coding Plan 采集器
 
-这是第一条真实官方数据源的**本机渲染采集器**。智谱官方套餐页
+这是第一条真实官方数据源的**本机/CI 渲染采集器**。智谱官方套餐页
 <https://www.bigmodel.cn/glm-coding> 是 Vue SPA，价格只在浏览器执行 JavaScript
 后出现，匿名 HTTP 接口不返回套餐价格。采集器用 headless Chrome 打开公开页面，
 读取 Lite / Pro / Max 三个档位在“连续包月 / 连续包季 / 连续包年”三个 tab 下的
@@ -62,7 +62,11 @@ adb reverse tcp:8787 tcp:8787
 2. 先跑采集器测试；
 3. 用 headless Chrome 采集官方套餐页；
 4. 用 `validate-payload.mjs` 校验 3 档 × 3 周期、来源、金额和新鲜度；
-5. 把 JSON 作为 GitHub Pages artifact 发布。
+5. 把 JSON 作为 GitHub Pages artifact 发布；
+6. 部署后用 `verify-published.mjs` 重拉公网 JSON，要求字节 SHA-256 等于本次
+   artifact、HTTP 200、schema 合法且在 2 小时内；
+7. `build-android` 用同一个 endpoint 跑 JVM 测试和 Release 构建；
+8. 失败/2h 过期自动开 GitHub Issue；`glm-snapshot-health.yml` 每小时独立检查新鲜度。
 
 首次使用前：
 
@@ -104,8 +108,14 @@ Android 构建时注入：
 node tools/glm-collector/validate-payload.mjs \
   public/glm-coding-plan.json --max-age-seconds 1800
 
+# 校验线上 Pages 的字节、schema 与新鲜度（可加 --expected-sha256）
+node tools/glm-collector/verify-published.mjs \
+  https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json \
+  --max-age-seconds 7200 --attempts 2
+
 # 单独看校验器测试
 node --test tools/glm-collector/test/validate.test.mjs
+node --test tools/glm-collector/test/verify-published.test.mjs
 ```
 
 ## JSON 契约
@@ -177,8 +187,9 @@ node --test tools/glm-collector/test/*.test.mjs
 ```
 
 测试覆盖金额解析、3 档 × 3 周期 = 9 个 offer、季/年总价与月均、缺失 tab/档位、
-当前价高于原价、来源/来源 ID 不匹配、重复 ID、过期/未来抓取时间，以及
-`validate-payload.mjs` 的失败关闭行为。当前 10 / 10 通过（4 payload + 6 校验/CLI）。
+当前价高于原价、来源/来源 ID 不匹配、重复 ID、过期/未来抓取时间、
+`validate-payload.mjs` 的失败关闭行为，以及发布端点的 HTTP 重试、过期拒绝、
+线上字节 SHA-256 不一致拒绝。当前 **15 / 15** 通过（4 payload + 6 校验/CLI + 5 发布校验）。
 
 ## 已知限制
 
@@ -189,3 +200,5 @@ node --test tools/glm-collector/test/*.test.mjs
 - 只覆盖个人套餐，不含团队套餐、优惠券、首月立减等登录后价格。
 - 页面文案/价格随时可能变化；每次采集都以 `fetchedAtEpochMillis` 和原文摘要留痕。
 - 本地运行需要 Chrome；CI 使用 `browser-actions/setup-chrome`。Android 设备无法直接渲染该 SPA，Debug 通过本机采集器或 `adb reverse` 获取 JSON。
+- CI 的 Android job 用一次性 key 签 helper APK，只用于冒烟/下载，不是正式 release 签名。
+- 发布校验依赖 GitHub Pages 公网可达；它验证的是“刚部署的字节”，不是长期可用性 SLA。

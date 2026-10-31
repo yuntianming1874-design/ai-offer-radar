@@ -22,19 +22,22 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
 | 阶段 11（设备端到端验收与交付） | 已完成：手工验收 1–8 已在 OPD2515 执行并归档（2026-10-30 22:19–22:32），127 JVM / 84 设备测试 |
 | 阶段 12（GLM Coding Plan 官方源纵向切片） | 已完成：134 JVM / 22 suites；86 / 86 设备测试通过；官方模式真机验收已归档（2026-10-31 00:13） |
 | 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 已完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions + Pages 已启用，远程 workflow 成功发布 3 products / 9 offers |
+| 阶段 12 增强 P1（CI 自证端到端） | 已实现，待远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests |
 
 当前是可构建、可安装、可测试的开发版本，不是生产版本。
 
-最近一次验证（2026-10-31 00:53，阶段 12 增强）：
+最近一次验证（2026-10-31 15:48，阶段 12 增强 P1 本地验证；远端首跑待执行）：
 
 - `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest`：`BUILD SUCCESSFUL`，56s，84 tasks
 - JVM 单元测试：**137 / 137**（23 suites）
 - Lint：**0 errors，2 warnings**（既有 API 标记与未使用颜色）
-- 采集器测试：**10 / 10**（4 个 payload + 6 个校验/CLI）；本机采集器实测 3 products / 3 plans / 9 offers
+- 采集器/发布校验测试：**15 / 15**（4 个 payload + 6 个校验/CLI + 5 个发布端点校验）；本机采集器实测 3 products / 3 plans / 9 offers
+- P1 本地验证：`testDebugUnitTest assembleRelease` 33s / 76 tasks；线上 `verify-published.mjs` 通过（3 档 / 9 offers，SHA-256 `5e7aebdc528862abdd2dfc6341f10cd1d7da3276b680efb6c17a1feff3a5ac03`）；helper APK 签名脚本本地模拟通过；两个 workflow YAML 解析通过；**尚未在 GitHub 远端执行 P1 工作流**
 - 设备仪器测试：**86 / 86**（OPD2515 / Android 17 / API 37，1m 8s）
   - 阶段 11 历史设备基线：84 / 84（2026-10-30 22:34）
 - Release endpoint：不传 property 时 `GLM_COLLECTOR_URL=""`（官方模式明确失败关闭）；传 `-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 后 BuildConfig 与 APK 构建均通过
 - CI 定时采集：`.github/workflows/glm-collector.yml` 已在 GitHub Actions 真实运行成功（[run 41180172626](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41180172626)）；Pages 快照 <https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json> 经 `validate-payload.mjs` 校验通过（3 products / 3 plans / 9 offers）
+- CI 自证（P1）：部署后由 `verify-published.mjs` 重拉线上 JSON，HTTP/schema/2h 新鲜度通过且字节 SHA-256 必须等于本次 artifact；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建；失败自动开 Issue，`glm-snapshot-health.yml` 每小时检查 2 小时新鲜度
 - 阶段 12 官方模式真机验收：GLM Lite/Pro/Max × 月/季/年；Lite 年付首页 `¥991.20/年`、折合 `¥82.60`；Lite 季付详情总价 `¥283.20`、折合 `¥94.40`；采集器停止后失败原因与缓存保留；切回演示不混数据
 - 阶段 12 明细：[docs/PHASE12_PROGRESS.md](docs/PHASE12_PROGRESS.md)
 - 阶段 11 手工验收：**已执行**（22:19–22:32），证据见 [docs/PHASE11_DEVICE_ACCEPTANCE.md](docs/PHASE11_DEVICE_ACCEPTANCE.md) 与 `docs/evidence/2026-10-30/phase11/device-manual/`
@@ -270,7 +273,8 @@ app/src/main/java/com/aioffer/radar/
 └── ui/theme/                      Material 3 主题
 
 tools/glm-collector/               本机/CI GLM 官方套餐页渲染采集器（Node + Chrome CDP）
-.github/workflows/glm-collector.yml 定时采集、校验并发布到 GitHub Pages
+.github/workflows/glm-collector.yml 定时采集、校验、发布并自证线上字节
+.github/workflows/glm-snapshot-health.yml 每小时检查线上快照是否超过 2 小时
 app/src/test/                       JVM 单元测试
 app/src/androidTest/                Room、同步、通知、Compose、深链设备测试
 app/schemas/                        Room schema 与迁移测试资产
@@ -297,6 +301,8 @@ android: OFFICIAL 模式
   -> tools/glm-collector (Node + headless Chrome)
   -> https://www.bigmodel.cn/glm-coding
   -> GitHub Actions 每 30 分钟采集 + validate-payload.mjs + Pages 发布
+  -> verify-published.mjs 重拉线上字节（HTTP/schema/2h/SHA-256）
+  -> build-android 用同一 endpoint 跑 JVM + Release；失败/过期开 Issue
 
 OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationDispatcher
 ```
@@ -348,6 +354,7 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 - 通知深链冷启动、热启动、旋转、返回栈
 - 官网 URL 安全回退
 - 首页季付 display + 月均最低选择
+- 发布端点校验：HTTP 重试、过期拒绝、线上字节 SHA-256 与构建产物不一致拒绝、CLI 本地 HTTP 服务
 
 测试证据在 [docs/PHASE12_PROGRESS.md](docs/PHASE12_PROGRESS.md)、[docs/PHASE11_PROGRESS.md](docs/PHASE11_PROGRESS.md)、[docs/PHASE10_PROGRESS.md](docs/PHASE10_PROGRESS.md)、[docs/PHASE9_PROGRESS.md](docs/PHASE9_PROGRESS.md) 与 [docs/evidence/2026-10-30/README.md](docs/evidence/2026-10-30/README.md)。
 
@@ -366,7 +373,8 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 - FCM 未接入；`NoOpPushNotificationService` 只证明边界存在。
 - WorkManager 周期任务不保证实时；设备休眠/厂商策略会延迟。
 - 通知 `SENT` 表示已提交给系统，不保证用户实际看到；渠道被关闭时事件保持 `PENDING`。
-- 没有 release 签名、应用发布 CI、Play 发布配置；`release` 未开启混淆。GLM 采集 workflow 已在远端运行；远程 Pages 已发布快照。
+- 没有 release 签名、应用发布 CI、Play 发布配置；`release` 未开启混淆。GLM 采集 workflow 已在远端运行；远程 Pages 已发布快照。P1 新增的 `build-android` 产物是用 CI 临时 key 签名的 helper APK，不是正式发布包。
+- P1 的部署后哈希校验、Android job 与 Issue 告警已在本地验证；远端首次运行记录待补充（见 `docs/evidence/2026-10-31/`）。
 - 深链在“已有 saved state 且系统用全新 intent 重建 Activity”的罕见路径未覆盖。
 - 同一比较分组存在多个优惠时，“当前观测”用同金额最新快照近似；演示数据没有这种组合。
 - Lint 仍有 2 个 warning：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
@@ -374,8 +382,7 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 
 ## 下一步建议
 
-1. 用已发布的 Pages endpoint（`-PglmCollectorUrl=https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json`）
-   构建 Release，并在真机蜂窝网络下验收官方模式；确认 2 小时新鲜度与失败保留缓存。
+1. 观察 P1 远端首跑：确认部署后哈希校验、Android Release job、失败/2h 过期 Issue 告警都按预期工作；再决定是否把 `build-android` 改成正式签名。
 2. 扩大设备矩阵：在 API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak 下复跑阶段 11/12 验收。
 3. 发布前：release 签名、应用 CI、WorkManager soak、真实设备长期运行、通知渠道/权限全矩阵。
 4. 交接给下一位开发者时先读 [docs/HANDOFF.md](docs/HANDOFF.md)。
