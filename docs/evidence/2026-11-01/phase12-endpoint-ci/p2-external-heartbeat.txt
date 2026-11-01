@@ -84,3 +84,6 @@ Remaining limitations:
   proof, not the schedule.
 - No hosted dashboard/alerting for heartbeat itself; if the Mac is offline the
   client 2h guard and health workflow remain the backstops.
+- Keychain currently stores the gh device-flow token (scopes repo/workflow),
+  broader than necessary; production should replace it with a fine-grained PAT
+  limited to this repository (Contents RW + Actions R).

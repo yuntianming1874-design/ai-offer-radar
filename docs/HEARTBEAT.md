@@ -22,6 +22,10 @@ GitHub 只在 `13:31Z` 和 `14:32Z` 各跑过一次自动 schedule，无法提�
 已安装并 loaded；`repository_dispatch` 真实运行 run 41330211849 成功；
 heartbeat 脚本从 Keychain 读取 token 后真实触发 run 41330761449 成功。局限：
 它只在这台 Mac 上，休眠/断网时不会触发，生产应迁到常在线主机。
+安全说明：当前 Keychain 中存的是 `gh` 设备流 token（scopes `repo`/`workflow`），
+权限比 heartbeat 所需更宽；生产建议换只授权本仓库的 fine-grained PAT
+（Contents read/write + Actions read），并用 `security add-generic-password -U`
+覆盖。
 
 ## 数据流
 
