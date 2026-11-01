@@ -4,7 +4,7 @@
 P2 远端验证：2026-10-31 23:23–23:30（Asia/Shanghai）
 P2.1 签名 Release：2026-11-01 00:43–00:46（Asia/Shanghai）
 P2.2 CI artifact 真机安装 + 真实过期快照：2026-11-01 01:33–01:40（Asia/Shanghai）
-P2.3 外部 heartbeat（本地）：2026-11-01 23:55；见 [`../2026-11-01/`](../2026-11-01/README.md)
+P2.3 外部 heartbeat（本地 + 远端）：2026-11-02 01:21；见 [`../2026-11-01/`](../2026-11-01/README.md)
 最终设备复跑：2026-10-31 00:52（86 / 86，1m 8s）
 设备：OPD2515 / Android 17 / API 37 / serial `<device-serial>`
 基线：`6f4229a`（tag `phase12-glm-source`）

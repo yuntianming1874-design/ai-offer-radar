@@ -24,11 +24,11 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
 | 阶段 12 增强（endpoint 配置化 + CI 定时采集） | 已完成：137 JVM / 23 suites；86 / 86 设备；GitHub Actions + Pages 已启用，远程 workflow 成功发布 3 products / 9 offers |
 | 阶段 12 增强 P1（CI 自证端到端） | 已完成远端首跑：部署后字节/新鲜度校验、Android Release build job、失败/2h 过期 Issue 告警；15 Node tests；run 41182662449 成功；P2 已补失败路径演练 |
 | P2（失败告警演练 + Release 签名） | 失败告警演练已完成；unsigned 与正式签名 Release workflow 均已远端成功；CI 签名 artifact 已真机安装并验签；真实过期快照被 2 小时守卫拦截并手动恢复；签名 key 仅在本机/Keychain |
-| P2.3（外部 heartbeat） | 已实现：每 15 分钟检查线上快照，超过 75 分钟通过 `repository_dispatch` 触发采集；GitHub `schedule` 降为兜底；8 项 heartbeat 测试与本地 mock dispatch 通过；launchd/远端 dispatch 待 GitHub token 激活 |
+| P2.3（外部 heartbeat） | 已激活：每 15 分钟检查线上快照，超过 75 分钟通过 `repository_dispatch` 触发采集；GitHub `schedule` 降为兜底；8 项 heartbeat 测试、真实 dispatch（run 41330761449）与 macOS launchd 安装/运行均通过 |
 
 当前是可构建、可安装、可测试的开发版本，不是生产版本。
 
-最近一次验证（2026-11-01 23:55，P2.3 外部 heartbeat 本地验证；设备基线为 01:40 P2 签名安装）：
+最近一次验证（2026-11-02 01:21，P2.3 外部 heartbeat 真实 dispatch 与 launchd；设备基线为 01:40 P2 签名安装）：
 
 - `clean assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest`：`BUILD SUCCESSFUL`，56s，84 tasks
 - JVM 单元测试：**137 / 137**（23 suites）
@@ -45,7 +45,7 @@ CI 快照：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-
 - P2 正式签名（[run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911)）：1m59s 成功；versionCode 1 / 1.0.0；APK SHA-256 `b08b6208691f567cfec88ff4a555dd57319c13676509816fb94e88ab420aaf27`；v2 证书 SHA-256 `54f6ee32…`；artifact 已下载验签
 - P2 签名 artifact 真机安装（2026-11-01 01:36）：设备内 APK SHA-256 与 artifact 完全一致；证书一致；`adb install -r` 成功
 - P2 真实过期快照（2026-11-01 01:36）：快照 15:31:50Z 超过 2h，同步显示“采集数据已过期…已超过 120 分钟”，缓存保留、无崩溃；手动触发 [run 41225390770](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41225390770) 刷新后 01:40 同步成功
-- 外部 heartbeat（2026-11-01 23:55 本地）：线上快照年龄 70m 判定 fresh；mock API 90m 快照正确发送 `glm-heartbeat` dispatch；`glm-collector.yml` 已支持 `repository_dispatch`、`schedule`、`workflow_dispatch`；macOS launchd 安装器待 token 后安装
+- 外部 heartbeat（2026-11-02 01:11–01:21）：推送 commit `ad78a3a` 后 `repository_dispatch` 真实运行成功（[run 41330211849](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41330211849)）；heartbeat 脚本按 `--threshold-minutes 1` 真实发送 dispatch（[run 41330761449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41330761449)，成功）；macOS launchd `com.aioffer.radar.collector-heartbeat` 已安装并 loaded，首次运行读到快照 5m、判定 fresh；线上快照 `fetchedAt=17:18:29Z`、3 档 / 9 offers，`verify-published` 通过
 - 阶段 12 官方模式真机验收：GLM Lite/Pro/Max × 月/季/年；Lite 年付首页 `¥991.20/年`、折合 `¥82.60`；Lite 季付详情总价 `¥283.20`、折合 `¥94.40`；采集器停止后失败原因与缓存保留；切回演示不混数据
 - 阶段 12 明细：[docs/PHASE12_PROGRESS.md](docs/PHASE12_PROGRESS.md)
 - 阶段 11 手工验收：**已执行**（22:19–22:32），证据见 [docs/PHASE11_DEVICE_ACCEPTANCE.md](docs/PHASE11_DEVICE_ACCEPTANCE.md) 与 `docs/evidence/2026-10-30/phase11/device-manual/`
@@ -385,7 +385,7 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 - WorkManager 周期任务不保证实时；设备休眠/厂商策略会延迟。
 - 通知 `SENT` 表示已提交给系统，不保证用户实际看到；渠道被关闭时事件保持 `PENDING`。
 - Release 正式签名 CI 已闭环（`.github/workflows/release.yml` + 条件 signingConfig）：四个 Secrets 已配置，签名 APK 在 [run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911) 构建并验签；keystore 仅在本机/Keychain，不入库。`build-android` 的 helper APK 仍用 CI 临时 key，不是正式发布包；Play 发布配置、混淆策略仍未实现。
-- P1 的部署后哈希校验、Android job 与健康路径已在远端通过；P2 已实测失败 Issue 的创建/去重/恢复关闭与失败 run 置红。2026-11-01 01:36 已发生真实过期快照并被 2 小时守卫拦截，手动刷新后恢复；GitHub `schedule` 只观察到各一次自动运行，不能作为 SLA。外部 heartbeat 已实现（macOS launchd + 任意 cron 脚本），但本机 launchd 依赖 Mac 开机/联网，生产应放到常在线 VM/容器；远端 dispatch/launchd 尚未激活验证。
+- P1 的部署后哈希校验、Android job 与健康路径已在远端通过；P2 已实测失败 Issue 的创建/去重/恢复关闭与失败 run 置红。2026-11-01 01:36 已发生真实过期快照并被 2 小时守卫拦截，手动刷新后恢复；GitHub `schedule` 只观察到各一次自动运行，不能作为 SLA。外部 heartbeat 已真实激活（run 41330211849 / 41330761449），但本机 launchd 依赖 Mac 开机/联网，生产应放到常在线 VM/容器；GitHub `schedule` 仍只观察到少量自动运行，只能当兜底。
 - 深链在“已有 saved state 且系统用全新 intent 重建 Activity”的罕见路径未覆盖。
 - 同一比较分组存在多个优惠时，“当前观测”用同金额最新快照近似；演示数据没有这种组合。
 - Lint 仍有 2 个 warning：`POST_NOTIFICATIONS` 常量 API 标记、未使用颜色 `radar_blue`。
@@ -393,7 +393,7 @@ OfferSyncWorker -> SettingsAwareSyncService -> OfferSyncService -> NotificationD
 
 ## 下一步建议
 
-1. 激活并验证外部 heartbeat：配置 GitHub token、安装 launchd 或部署到常在线 cron，确认 `repository_dispatch` 真实触发；然后把 API 26–36 兼容矩阵作为下一项。正式签名已跑通，后续发布沿用同一 key 并递增 versionCode。
+1. 把外部 heartbeat 从本机 launchd 迁到常在线 VM/容器（避免 Mac 休眠/断网），再做 API 26–36 兼容矩阵。正式签名已跑通，后续发布沿用同一 key 并递增 versionCode。
 2. 扩大设备矩阵：在 API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak 下复跑阶段 11/12 验收。
 3. 发布前：正式签名、Play 配置、WorkManager soak、真实设备长期运行、通知渠道/权限全矩阵。
 4. 交接给下一位开发者时先读 [docs/HANDOFF.md](docs/HANDOFF.md)。

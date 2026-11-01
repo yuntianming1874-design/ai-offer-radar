@@ -18,6 +18,11 @@ GitHub 只在 `13:31Z` 和 `14:32Z` 各跑过一次自动 schedule，无法提�
 75 分钟阈值给采集、Pages 部署和一次重试留出约 45 分钟，避免等到 2 小时守卫
 才恢复。heartbeat 本身每 15 分钟运行一次，最坏情况下约 90 分钟触发刷新。
 
+当前状态（2026-11-02 01:21）：macOS launchd `com.aioffer.radar.collector-heartbeat`
+已安装并 loaded；`repository_dispatch` 真实运行 run 41330211849 成功；
+heartbeat 脚本从 Keychain 读取 token 后真实触发 run 41330761449 成功。局限：
+它只在这台 Mac 上，休眠/断网时不会触发，生产应迁到常在线主机。
+
 ## 数据流
 
 ```text

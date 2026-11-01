@@ -85,6 +85,11 @@ GITHUB_TOKEN=... node tools/glm-collector/heartbeat.mjs
 token 权限、Keychain、launchd 状态/卸载和托管 cron 说明见
 [docs/HEARTBEAT.md](../../docs/HEARTBEAT.md)。
 
+2026-11-02 01:11–01:21 已真实验证：`repository_dispatch` run 41330211849 成功；
+`heartbeat.mjs --threshold-minutes 1` 读取 Keychain token 后真实触发
+run 41330761449 成功；launchd `com.aioffer.radar.collector-heartbeat` 已安装并
+loaded，首次运行判定 fresh。
+
 首次使用前：
 
 1. 把仓库推到 GitHub（免费账号的 Pages 需仓库为 public）；

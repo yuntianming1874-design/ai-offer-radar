@@ -213,7 +213,20 @@ node tools/glm-collector/verify-published.mjs \
   Release BuildConfig 含线上 URL；
 - CI helper 签名脚本本地模拟通过：`apksigner verify` 成功；
 - 两个 workflow YAML 均通过 Ruby Psych 解析；
-- macOS launchd 安装器 `bash -n` 通过，`status` 显示未安装（等待 token 后安装）。
+- macOS launchd 安装器 `bash -n` 通过；11-02 01:17 已安装并 loaded，首次运行读到快照 5m，判定 fresh。
+
+2026-11-02 01:11–01:21 远端 heartbeat 验证：
+
+- 推送 commit `ad78a3a`；`gh api` 发送 `repository_dispatch`，[run 41330211849](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41330211849)
+  17:11:37Z 触发，17:16:00Z 成功；collect-and-publish / build-android /
+  close-recovered-issue 全绿，notify-failure 健康时跳过。
+- `heartbeat.mjs` 从 Keychain 读取 token，按 `--threshold-minutes 1` 判定 stale，
+  真实 dispatch [run 41330761449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41330761449)，
+  17:18:02Z 触发，17:21:07Z 成功。
+- launchd `com.aioffer.radar.collector-heartbeat` 已安装；`launchctl print` 为 loaded，
+  日志 `fresh (5m < 75m)`；每 900 秒运行。
+- 线上 `verify-published.mjs` 通过：3 档 / 9 offers，SHA-256 `728a5bc7…`，
+  `source.fetchedAtEpochMillis=1793553509594`（17:18:29Z）。
 
 已执行的远端记录：
 
