@@ -1,12 +1,23 @@
 # CI 定时采集与远程 endpoint
 
 本文说明 GLM Coding Plan 官方源如何从“开发机本地采集器”升级为
-“CI 定时采集 + HTTPS 静态 JSON”，以及 CI 如何自证发布物可用。
+“外部 heartbeat + CI 采集 + HTTPS 静态 JSON”，以及 CI 如何自证发布物可用。
+
+GitHub Actions 的 `schedule` 只作为兜底；主触发是仓库外部的 heartbeat（当前提供
+macOS launchd 安装器，也可放到任意常在线 cron/容器）。heartbeat 每 15 分钟检查
+线上快照，超过 75 分钟就通过 `repository_dispatch` 触发采集。
 
 ## 数据流
 
 ```text
-GitHub Actions（每 30 分钟）
+外部 heartbeat（每 15 分钟；launchd 或任意 cron）
+  └─ 读取 Pages 快照年龄
+       ├─ < 75 分钟：退出
+       └─ >= 75 分钟：查询最近 run（进行中则跳过）
+            └─ POST /repos/<owner>/<repo>/dispatches {event_type: glm-heartbeat}
+                 └─ GitHub Actions glm-collector.yml（主触发）
+
+GitHub Actions（schedule 每 30 分钟，兜底）
   └─ headless Chrome 访问 https://www.bigmodel.cn/glm-coding
        └─ 解析 3 档 × 3 周期 = 9 个 offer
             └─ validate-payload.mjs 校验来源、金额、完整性、新鲜度
@@ -30,7 +41,9 @@ GitHub Actions（每 30 分钟）
 
 文件：`.github/workflows/glm-collector.yml`
 
-- 触发：`schedule` 每 30 分钟 + `workflow_dispatch`
+- 触发：`repository_dispatch`（`glm-heartbeat`，外部 heartbeat 主路径）+
+  `schedule` 每 30 分钟（兜底）+ `workflow_dispatch`（人工）
+- `concurrency` 使用 `cancel-in-progress: false`，外部触发不会取消正在进行的部署
 - 权限：`contents: read`、`pages: write`、`id-token: write`；告警 job 额外
   `issues: write`
 - job：
@@ -47,6 +60,26 @@ GitHub Actions（每 30 分钟）
 公网 URL，只有 HTTP 200、schema 合法、未超过 2 小时且 SHA-256 与本次产物
 完全一致，job 才变绿。
 
+### 外部 heartbeat
+
+实现：
+
+- `tools/glm-collector/heartbeat.mjs`：检查快照、查询最近 run、发送
+  `repository_dispatch`；支持 `--dry-run`、阈值和 API base 覆盖。
+- `tools/glm-collector/install-heartbeat.macos.sh`：安装 macOS launchd agent
+  `com.aioffer.radar.collector-heartbeat`，每 15 分钟运行；token 从登录 Keychain
+  读取，不写入 plist。
+- `docs/HEARTBEAT.md`：token 权限、安装、托管 cron、验证与限制。
+
+触发语义：
+
+- 快照年龄 `< 75m`：不操作；
+- `>= 75m` 且最近 run 为 `queued`/`in_progress`/`requested`/`waiting`/`pending`：
+  跳过，避免重复；
+- `>= 75m` 且空闲：发送 `glm-heartbeat`，事件触发本 workflow；
+- 快照不可读：保守触发；
+- 75 分钟阈值给采集 + Pages 部署 + 一次重试留约 45 分钟，早于客户端 2h 硬阈值。
+
 ### `glm-snapshot-health.yml`
 
 文件：`.github/workflows/glm-snapshot-health.yml`
@@ -56,6 +89,8 @@ GitHub Actions（每 30 分钟）
   Pages 一直返回旧文件，健康检查会以 2 小时为阈值失败。
 - 失败时开/更新 Issue `GLM snapshot is stale (>2h)`；恢复后自动关闭。
 - 这样即使“最后一次成功超过 2 小时”而没有新的失败 run，也会被发现。
+- 注意：health workflow 自身也依赖 GitHub `schedule`，所以它只是告警兜底；
+  主恢复路径是外部 heartbeat。
 - 手动演练（2026-10-31 已执行）：`workflow_dispatch` 传 `max_age_seconds=1` 触发失败，
   创建 [Issue #1](https://github.com/yuntianming1874-design/ai-offer-radar/issues/1)（run
   [41214658712](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41214658712)）；
@@ -120,7 +155,7 @@ Release 为空时，`AppContainer` 将 `officialAdapterConfigured` 设为 `false
 
 ## 新鲜度与失败语义
 
-- CI 每 30 分钟采集；App 端最大允许 2 小时。
+- 外部 heartbeat 在 75 分钟触发；GitHub schedule 每 30 分钟兜底；App 端最大允许 2 小时。
 - `GlmCodingPlanRemoteDataSource` 校验 `fetchedAtEpochMillis`：
   - 超过 2 小时：拒绝，错误“采集数据已过期”；
   - 晚于当前时间 5 分钟：拒绝，错误“抓取时间异常”。
@@ -163,17 +198,22 @@ node tools/glm-collector/verify-published.mjs \
 ./gradlew assembleDebug -PglmCollectorUrl=https://example.com/glm-coding-plan.json
 ```
 
-2026-10-31 15:48 本地结果：
+2026-11-01 23:55 本地结果：
 
-- `node --test tools/glm-collector/test/*.test.mjs`：**15 / 15** 通过
-  （4 payload + 6 校验/CLI + 5 发布校验）；
+- `node --test tools/glm-collector/test/*.test.mjs`：**23 / 23** 通过
+  （4 payload + 6 校验/CLI + 5 发布校验 + 8 heartbeat）；
+- heartbeat 对线上快照 `--dry-run`：70 分钟，判定 fresh，不触发；
+- 本地 mock GitHub API 集成：90 分钟快照触发 `glm-heartbeat` dispatch（HTTP 204）；
+- `glm-collector.yml` 已含 `repository_dispatch` / `schedule` / `workflow_dispatch`
+  三种触发，YAML 解析通过；
 - 线上 endpoint `verify-published.mjs` 通过：3 档 / 9 个 offer，
   SHA-256 `5e7aebdc528862abdd2dfc6341f10cd1d7da3276b680efb6c17a1feff3a5ac03`；
 - `testDebugUnitTest assembleRelease -PglmCollectorUrl=线上地址`：
   `BUILD SUCCESSFUL`，33s / 76 tasks；JVM **137 / 137（23 suites）**；
   Release BuildConfig 含线上 URL；
 - CI helper 签名脚本本地模拟通过：`apksigner verify` 成功；
-- 两个 workflow YAML 均通过 Ruby Psych 解析。
+- 两个 workflow YAML 均通过 Ruby Psych 解析；
+- macOS launchd 安装器 `bash -n` 通过，`status` 显示未安装（等待 token 后安装）。
 
 已执行的远端记录：
 
@@ -196,10 +236,14 @@ node tools/glm-collector/verify-published.mjs \
 - GitHub 的 `schedule` 可能延迟；30 分钟是期望值，不是 SLA。2026-10-31
   观察到 13:31Z 自动运行后，14:01/14:31/15:01/15:31Z、16:01/16:31/17:01/17:31Z
   连续未出现；health workflow 也只在 14:32Z 自动运行一次。
+- 已补外部 heartbeat：`heartbeat.mjs` + macOS launchd 安装器，主触发改为
+  `repository_dispatch`，GitHub schedule 降为兜底。当前 launchd 依赖本机开机/联网；
+  生产建议把同一脚本放到常在线 VM/容器或托管 cron，见
+  [HEARTBEAT.md](HEARTBEAT.md)。
 - 2026-11-01 01:36（Asia/Shanghai）因此发生**真实过期快照**：客户端正确显示
   “采集数据已过期…已超过 120 分钟”并保留缓存；手动触发 run 41225390770
-  刷新后 01:40 同步恢复。2 小时阈值只是兜底，生产运行需要外部 cron/heartbeat
-  或独立可观测的定时触发，不能把 GitHub schedule 当保证。
+  刷新后 01:40 同步恢复。2 小时阈值只是兜底；外部 heartbeat 已实现，但本机
+  launchd 不是生产级 SLA，不能把 GitHub schedule 或单台 Mac 当保证。
 - GitHub Pages 需要仓库为 public 或付费计划；免费账号对 private 仓库会返回
   “Your current plan does not support GitHub Pages for this repository”。
   本项目已改为 public，代码与证据已脱敏。

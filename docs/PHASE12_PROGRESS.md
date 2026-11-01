@@ -1,11 +1,11 @@
 # 阶段 12：GLM Coding Plan 官方源纵向切片
 
-更新时间：2026-10-31
-状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 发布与 JSON 校验；P1 CI 自证远端首跑通过；P2 失败告警演练、unsigned 与正式签名 Release workflow、CI artifact 真机安装均已远端/真机通过；真实过期快照已被守卫拦截并手动恢复**
+更新时间：2026-11-01
+状态：**阶段 12 已完成；阶段 12 增强（endpoint 配置化 + CI 定时采集）已完成远程 Pages 发布与 JSON 校验；P1 CI 自证远端首跑通过；P2 失败告警演练、unsigned 与正式签名 Release workflow、CI artifact 真机安装均已远端/真机通过；真实过期快照已被守卫拦截并手动恢复；P2.3 外部 heartbeat 已实现（本地单测/mock dispatch 通过，远端 dispatch/launchd 待 token 激活）**
 范围：第一条真实官方数据源、`QUARTERLY` 计费周期、采集器、Android 适配器、endpoint/CI、测试与证据。
 
 > 2026-10-31 00:53 增强：endpoint 已改为构建时注入（Debug 本机 / Release CI HTTPS），
-> GitHub Actions 定时采集 workflow 已实现并在远端真实运行成功；JVM 137/137、设备 86/86、Node 10/10；P1 将 Node 增至 15/15（本地）。
+> GitHub Actions 定时采集 workflow 已实现并在远端真实运行成功；JVM 137/137、设备 86/86、Node 10/10；P1 将 Node 增至 15/15（本地），P2.3 增至 23/23。
 > 公开仓库已推送，Pages 已启用；快照 `https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json`
 > 已发布并通过 `validate-payload.mjs` 校验（3 products / 9 offers）。详见文末“阶段 12 增强”。
 
@@ -210,7 +210,8 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 正式签名（2026-11-01 00:43–00:46）：四个 Secrets 配置后 [run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911) 成功（1m59s；Gradle 1m20s / 77 tasks）；artifact `ai-offer-radar-1.0.0-signed.apk` SHA-256 `b08b6208…`，v2 证书 `54f6ee32…`，版本 1 / 1.0.0。
 - 真机安装（2026-11-01 01:36）：CI artifact 安装成功，设备内 APK SHA-256 与 artifact 完全一致；versionCode 1 / 1.0.0。
 - 真实过期事故（2026-11-01 01:36）：快照 15:31:50Z 超过 2h，同步显示“采集数据已过期…已超过 120 分钟”，缓存保留、无崩溃；手动触发 [run 41225390770](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41225390770) 刷新后 01:40 同步成功。
-- **未解决**：GitHub `schedule` 只观察到各一次自动运行，不能提供 30 分钟/小时级 SLA；API 26–36/其他 ROM 未验证。
+- **外部 heartbeat（P2.3，2026-11-01 23:55 本地）**：`heartbeat.mjs` 每 15 分钟检查 Pages 快照，年龄超过 75 分钟且没有进行中的 run 时，通过 `repository_dispatch`（`glm-heartbeat`）触发采集；`install-heartbeat.macos.sh` 安装 launchd，token 从 Keychain 读取；`.github/workflows/glm-collector.yml` 已加 `repository_dispatch` 并把 `schedule` 降为兜底。Node 23/23；线上 70m 判定 fresh；mock 90m 正确 dispatch；launchd 尚未安装。
+- **未解决**：GitHub `schedule` 只观察到各一次自动运行，不能提供 30 分钟/小时级 SLA；外部 heartbeat 远端 dispatch/launchd 尚未激活；API 26–36/其他 ROM 未验证。
 
 ## 已知限制
 
@@ -222,12 +223,12 @@ GRADLE_RO_DEP_CACHE=$HOME/.gradle/caches \
 - 官方套餐页没有匿名价格 API；在拿到正式授权/稳定接口前，不把采集器部署成公共服务。
 - 微博/小红书 robots 对通用爬虫 `Disallow: /`，不做自动抓取；B 站/社媒只能做
   **未验证线索**，不能进入价格库或触发通知。详见 `docs/DATA_SOURCE_INTEGRATION.md`。
-- API 26–36/其他 ROM、通知渠道/省电 soak、FCM 仍未验证或未实现；正式签名 Release 已远端产出、验签并真机安装；真实过期快照已发生并被 2 小时守卫拦截，但 GitHub schedule 仅各一次自动运行，需外部 cron/heartbeat；P2 失败告警注入、去重、恢复关闭已在远端实测。
+- API 26–36/其他 ROM、通知渠道/省电 soak、FCM 仍未验证或未实现；正式签名 Release 已远端产出、验签并真机安装；真实过期快照已发生并被 2 小时守卫拦截；外部 heartbeat 已实现并把 GitHub schedule 降为兜底，但 launchd/远端 dispatch 待 token 激活，本机 launchd 依赖 Mac 开机/联网；P2 失败告警注入、去重、恢复关闭已在远端实测。
 - 2026-10-31 23:31 手动触发 collector 刷新快照；最后一次自动 schedule 为 13:31Z，14:01/14:31/15:01/15:31 未出现，schedule 可靠性需要继续监控。
 
 ## 下一步
 
-1. 为采集增加外部 cron/heartbeat，把 GitHub `schedule` 当兜底；再做 API 26–36 兼容矩阵。后续发布沿用同一 signing key、递增 versionCode。
+1. 配置 GitHub token 并激活外部 heartbeat（launchd 或常在线 cron），确认 `repository_dispatch` 真实触发；把 GitHub `schedule` 只当兜底；再做 API 26–36 兼容矩阵。后续发布沿用同一 signing key、递增 versionCode。
 2. 为采集器增加 selector 漂移回归与更明确的失败摘要（当前已有 workflow 失败/2h 健康 Issue）。
 3. 再扩展第二个产品，仍按“单产品、单来源、可审计”推进。
 4. 扩大设备矩阵：API 26–36、其他 ROM、通知渠道关闭、厂商省电与长期 soak。

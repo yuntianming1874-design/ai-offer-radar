@@ -1,8 +1,8 @@
 # AI 优惠雷达：交付说明
 
-更新时间：2026-10-31 15:48
+更新时间：2026-11-01 23:55
 适用版本：本地演示版 + GLM Coding Plan 官方源（`com.aioffer.radar`，版本号见 `app/build.gradle.kts`）
-交付结论：可构建、可安装、可测试；已接入**一条**真实 GLM 官方源，支持 Debug 本机采集器与 Release/CI HTTPS 快照；但**不是生产版本**，没有后端、账号、支付或 FCM；远程 CI/Pages 已启用并成功发布快照。
+交付结论：可构建、可安装、可测试；已接入**一条**真实 GLM 官方源，支持 Debug 本机采集器与 Release/CI HTTPS 快照；外部 heartbeat 为主触发、GitHub schedule 为兜底；但**不是生产版本**，没有后端、账号、支付或 FCM；远程 CI/Pages 已启用并成功发布快照。
 
 > 重要：内置数据全部是确定性演示数据。演示模式下首页固定显示“演示数据，非实时优惠”。官方模式的数据来自 `https://www.bigmodel.cn/glm-coding` 的公开套餐页，经 `tools/glm-collector` 渲染采集；Debug 走本机服务，Release 通过 `-PglmCollectorUrl` 指向 CI 定时发布的 HTTPS JSON。采集失败、endpoint 未配置或快照超过 2 小时时同步会失败并显示原因，不会把旧价描述为实时价。
 
@@ -14,16 +14,17 @@
 | JVM 单元测试 | **137 / 137**，0 failed / 0 errors / 0 skipped（23 suites） |
 | Lint | 0 errors，2 warnings（既有 `POST_NOTIFICATIONS` 标记、未使用 `radar_blue`） |
 | 设备自动化测试 | **86 / 86**（2026-10-31 00:52，OPD2515 / API 37，1m 8s）；阶段 11 历史基线 84 / 84 |
-| 采集器/发布校验测试 | **15 / 15**（payload 4 + 校验/CLI 6 + 发布端点校验 5） |
+| 采集器/发布校验/heartbeat 测试 | **23 / 23**（payload 4 + 校验/CLI 6 + 发布端点校验 5 + heartbeat 8） |
 | P1 CI 自证（部署后哈希、Android job、Issue 告警） | **远端首跑通过**：[run 41182662449](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41182662449)；部署后校验、Android job、恢复关闭、health workflow 成功；P2 已补失败路径演练 |
 | P2 失败告警 + Release workflow | 失败告警演练远端通过；unsigned 与正式签名 Release 均远端成功（签名 run 41221071911，v2 证书 `54f6ee32…`）；CI artifact 已真机安装；真实过期快照被守卫拦截并手动恢复；keystore 仅本机/Keychain |
 | Release endpoint | 无 property 时为空（失败关闭）；`-PglmCollectorUrl=https://example.com/glm-coding-plan.json` 时构建成功并正确注入 |
 | CI 定时采集 | **已在 GitHub Actions 真实运行成功**：run 41180172626；Pages 快照 3 products / 9 offers，JSON 校验通过 |
+| 外部 heartbeat | 代码/单测/mock dispatch 通过；每 15 分钟检查、75 分钟阈值、`repository_dispatch` 触发；GitHub schedule 已降为兜底；launchd/远端 dispatch 待 token 激活 |
 | 阶段 11 手工设备验收（步骤 1–8） | **已执行**：2026-10-30 22:19–22:32，OPD2515 / API 37；证据见 `docs/evidence/2026-10-30/phase11/device-manual/` |
 | 阶段 12 GLM 官方源 | **已完成真机验收**：官方同步、3 产品 × 3 周期、季付总价/月均、失败缓存态、切回演示隔离；证据见 `docs/evidence/2026-10-30/phase12/device-manual/` |
 | 交付说明 | 已完成（本文件） |
 
-阶段 12 的 JVM 134/134、采集器 4/4、Lint 0 errors / 2 warnings 和 86 项设备测试均已通过；阶段 12 增强后的最终复跑为 137 JVM、Node 10/10、设备 86/86；P1 将 Node 测试增加到 15/15，并补充部署后线上哈希校验与 Android Release build job。官方模式真机采集/同步与失败/隔离场景已执行。阶段 11 的构建、手工验收与文档已完成；部分无法在正常安装中自然制造的异常（非法 URL、无浏览器、数据库读取失败、清除记录）由仪器/单元测试覆盖，不能写成手工通过；详见 [PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md) 第 12 节。
+阶段 12 的 JVM 134/134、采集器 4/4、Lint 0 errors / 2 warnings 和 86 项设备测试均已通过；阶段 12 增强后的最终复跑为 137 JVM、Node 10/10、设备 86/86；P1 将 Node 测试增加到 15/15，P2.3 增加到 23/23，并补充部署后线上哈希校验、Android Release build job 与外部 heartbeat。官方模式真机采集/同步与失败/隔离场景已执行。阶段 11 的构建、手工验收与文档已完成；部分无法在正常安装中自然制造的异常（非法 URL、无浏览器、数据库读取失败、清除记录）由仪器/单元测试覆盖，不能写成手工通过；详见 [PHASE11_DEVICE_ACCEPTANCE.md](PHASE11_DEVICE_ACCEPTANCE.md) 第 12 节。
 
 ### 1.1 阶段 12 增量：GLM Coding Plan 官方源
 
@@ -40,16 +41,17 @@
 
 - endpoint：`BuildConfig.GLM_COLLECTOR_URL`；Debug 缺省本机 `http://127.0.0.1:8787/v1/glm-coding-plan`；Release 通过 `-PglmCollectorUrl=https://.../glm-coding-plan.json` 注入，未注入时官方模式明确“未配置”并失败关闭。
 - 新鲜度：`GlmCodingPlanRemoteDataSource` 拒绝超过 2 小时的快照，也拒绝晚于当前时间 5 分钟的时间戳；endpoint 为空时不发起网络。
-- CI：`.github/workflows/glm-collector.yml` 每 30 分钟运行，Node 24 + Chrome，采集后 `validate-payload.mjs` 校验，发布到 GitHub Pages；校验失败不发布。
+- CI：外部 heartbeat 每 15 分钟检查，超过 75 分钟通过 `repository_dispatch` 触发；`.github/workflows/glm-collector.yml` 保留 `schedule` 每 30 分钟兜底。Node 24 + Chrome 采集后 `validate-payload.mjs` 校验，发布到 GitHub Pages；校验失败不发布。
 - P1 CI 自证：deploy 后 `verify-published.mjs` 重新拉取线上 JSON，要求 HTTP 200、schema/2h 新鲜度通过且字节 SHA-256 等于 CI 产物；`build-android` 用同一 endpoint 跑 JVM 测试与 Release 构建并签 helper APK；失败/2h 过期自动开 Issue，恢复后关闭。
-- 本地验证：Node **15/15**；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过；线上 `verify-published` 通过；Android Release job 等价命令 33s / 76 tasks；两个 YAML 解析通过。
+- 本地验证：Node **23/23**；真实采集 3 档/9 offers 校验通过；JVM 137/137；Lint 0/2；设备 86/86；Release 两种 endpoint 构建均通过；线上 `verify-published` 通过；Android Release job 等价命令 33s / 76 tasks；三个 workflow 触发（repository_dispatch/schedule/workflow_dispatch）解析通过；heartbeat 线上 70m 判定 fresh、mock 90m 正确 dispatch。
 - **远端首跑（2026-10-31 16:02）**：`collect-and-publish` 34s，部署后校验第 1 次通过（3 档 / 9 offers，SHA-256 `3357c7cd…`）；`build-android` 3m 4s（Gradle `BUILD SUCCESSFUL in 2m 29s`，BuildConfig 含线上 URL，helper APK `8783870e…`）；`close-recovered-issue` 成功；`glm-snapshot-health` 7s 成功。页面：<https://yuntianming1874-design.github.io/ai-offer-radar/glm-coding-plan.json>。
 - P2 失败告警演练（远端，2026-10-31 23:23–23:25）：`max_age_seconds=1` 创建 [Issue #1](https://github.com/yuntianming1874-design/ai-offer-radar/issues/1)（run 41214658712）；重复失败去重且 run 置红（run 41214743795）；默认 7200 恢复并关闭 Issue（run 41214800226）。这是手动阈值演练，不是真实 stale 事故。
 - P2 Release workflow（远端）：`sign_release=false` 构建成功（run 41214833322，2m22s，versionCode 2 / 1.0.1-ci，APK SHA-256 `cf32651a…`，unsigned）；`sign_release=true` 缺 Secrets 时 22s 失败关闭（run 41215119074），不会静默产出 unsigned 包。
 - P2 正式签名（远端，2026-11-01 00:43–00:46）：四个 Secrets 配置后 `sign_release=true` 成功（[run 41221071911](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41221071911)，1m59s；Gradle 1m20s / 77 tasks）；`ai-offer-radar-1.0.0-signed.apk` SHA-256 `b08b6208…`，v2 证书 `54f6ee32…`，版本 1 / 1.0.0，endpoint 正确。
 - P2 真机与真实 stale（2026-11-01 01:33–01:40）：CI artifact 安装成功，设备内 APK 哈希与 artifact 完全一致；01:36 快照超过 2h，同步显示“采集数据已过期…已超过 120 分钟”，缓存保留、无崩溃；手动触发 [run 41225390770](https://github.com/yuntianming1874-design/ai-offer-radar/actions/runs/41225390770) 刷新后 01:40 同步成功。
-- **未验证/未解决**：GitHub `schedule` 只观察到各一次自动运行，不能提供 30 分钟/小时级 SLA；API 26–36/其他 ROM 未验证。
-- 下一步：外部 cron/heartbeat 兜底 + API 26–36 兼容矩阵；后续发布沿用同一 key、递增 versionCode。
+- 外部 heartbeat：`tools/glm-collector/heartbeat.mjs` 每 15 分钟检查 Pages 快照，超过 75 分钟时 `repository_dispatch`（event type `glm-heartbeat`）触发采集；有运行中的 run 时跳过；快照不可读时保守触发。`tools/glm-collector/install-heartbeat.macos.sh` 安装 launchd，token 从 Keychain 读取。GitHub `schedule` 只作为兜底。
+- **未验证/未解决**：GitHub `schedule` 只观察到各一次自动运行，不能提供 30 分钟/小时级 SLA；外部 heartbeat 的远端 dispatch/launchd 尚未激活；本机 launchd 依赖 Mac 开机/联网；API 26–36/其他 ROM 未验证。
+- 下一步：配置 token 并激活外部 heartbeat（launchd 或常在线 cron），再做 API 26–36 兼容矩阵；后续发布沿用同一 key、递增 versionCode。
 - 详细步骤见 [CI_GLM_COLLECTOR.md](CI_GLM_COLLECTOR.md) 与 [RELEASE_SIGNING.md](RELEASE_SIGNING.md)。
 
 ## 2. 构建、运行和测试
@@ -281,7 +283,7 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 ### 7.1 当前 GLM 官方源
 
 - 来源：`https://www.bigmodel.cn/glm-coding`，公开个人套餐页（Lite / Pro / Max；连续包月/包季/包年）。
-- 采集：`tools/glm-collector` 用 headless Chrome 渲染页面，输出 `RemoteSyncPayload` 同构 JSON；本机服务默认监听 `127.0.0.1:8787`，5 分钟缓存，失败 503 不回退旧价；CI 每 30 分钟采集并发布 HTTPS 静态 JSON。
+- 采集：`tools/glm-collector` 用 headless Chrome 渲染页面，输出 `RemoteSyncPayload` 同构 JSON；本机服务默认监听 `127.0.0.1:8787`，5 分钟缓存，失败 503 不回退旧价；外部 heartbeat/GitHub schedule 采集并发布 HTTPS 静态 JSON。
 - Android：`GlmCodingPlanRemoteDataSource` 从 `BuildConfig.GLM_COLLECTOR_URL` 读取 JSON；Debug 默认本机 + `adb reverse tcp:8787 tcp:8787`，Release 用 `-PglmCollectorUrl` 注入 Pages 地址。
 - 来源字段：`sourceUrl`、`fetchedAtEpochMillis`、`titleOrSummary`（页面原文摘要）、`officialUrl`（每个 offer）全部必填。
 - 金额：人民币分；季/年 `actualAmountMinor` 是总价，`monthlyEquivalentMinor` 是折合月价；`taxIncluded=true` 按页面含税展示处理。
@@ -365,7 +367,7 @@ adb shell cmd connectivity airplane-mode enable   # 或 svc wifi disable / svc d
 | CI 定时采集/Pages | `.github/workflows/glm-collector.yml` | 通过：run 41180172626；快照 JSON 校验 3 / 9 |
 | FCM / 服务端推送 | 未配置 | **未实现** |
 | 正式签名 Release、应用 CI | `release.yml`；run 41221071911 | 通过（v2 证书 `54f6ee32…`）；CI artifact 已真机安装，哈希一致 |
-| 采集 schedule 可靠性 | GitHub Actions 自动 schedule | **不足**：仅各一次自动运行；需外部 cron/heartbeat |
+| 采集触发可靠性 | 外部 heartbeat + GitHub schedule 兜底 | heartbeat 代码/单测/mock 通过；远端 dispatch/launchd **待激活**；GitHub schedule 仅各一次自动运行 |
 | Play 发布、混淆策略 | 未配置 | **未实现** |
 
 “通过”不等于生产验收：设备测试只证明 OPD2515 / API 37 且自动化覆盖到的路径；阶段 11 手工场景与阶段 12 官方模式真机场景已完成，设备矩阵、真实源生产化与长期稳定性仍需补齐。

@@ -1,0 +1,53 @@
+P2.3 external heartbeat — local verification
+Date: 2026-11-01 23:55 Asia/Shanghai
+Baseline: 0f4b322 (working tree before heartbeat commit)
+Node: /usr/local/bin/node v24.17.0
+
+1) Node tests
+$ node --test tools/glm-collector/test/*.test.mjs
+tests 23
+pass 23
+fail 0
+- payload.test.mjs: 4
+- validate.test.mjs: 6
+- verify-published.test.mjs: 5
+- heartbeat.test.mjs: 8 (fresh / dispatch / wait / unreadable / dry-run)
+
+2) Live snapshot dry-run (no token; snapshot was still fresh at this point)
+$ node tools/glm-collector/heartbeat.mjs --dry-run
+[2026-11-01T15:38:11.288Z] snapshot fetchedAt=2026-11-01T14:27:29.245Z age=70m
+[2026-11-01T15:38:11.288Z] heartbeat: fresh (70m < 75m)
+exit=0
+
+3) Local mock GitHub API integration (not GitHub itself)
+- mock endpoint: stale snapshot 90m, latest run completed, POST /dispatches -> 204
+$ GITHUB_TOKEN=test-token node tools/glm-collector/heartbeat.mjs \
+    --snapshot-url http://127.0.0.1:18081/glm-coding-plan.json \
+    --api-base-url http://127.0.0.1:18081 --repo example/test
+[2026-11-01T15:52:33.889Z] snapshot fetchedAt=2026-11-01T14:22:32.874Z age=90m
+[2026-11-01T15:52:33.891Z] heartbeat: stale (90m >= 75m)
+[2026-11-01T15:52:33.895Z] heartbeat: dispatched glm-heartbeat to example/test
+exit=0
+
+4) Workflow trigger mapping
+$ ruby -e 'require "yaml"; p YAML.load_file(".github/workflows/glm-collector.yml")[true]'
+{"schedule"=>[{"cron"=>"*/30 * * * *"}],
+ "repository_dispatch"=>{"types"=>["glm-heartbeat"]},
+ "workflow_dispatch"=>nil}
+concurrency: group glm-coding-plan-collector, cancel-in-progress false
+
+5) macOS launchd installer
+$ bash -n tools/glm-collector/install-heartbeat.macos.sh
+OK
+$ bash tools/glm-collector/install-heartbeat.macos.sh status
+plist: missing
+launchd: not loaded
+
+NOT YET VERIFIED:
+- real repository_dispatch against GitHub (no GitHub token yet)
+- launchd install / heartbeat.log
+- remote run triggered by repository_dispatch
+- GitHub schedule fallback observation after heartbeat activation
+
+Root cause for the missing step: the user chose "稍后" for device authorization;
+no GITHUB_TOKEN is available in this shell or Keychain.

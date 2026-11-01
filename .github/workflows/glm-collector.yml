@@ -2,9 +2,12 @@ name: GLM Coding Plan collector
 
 on:
   schedule:
-    # Refresh the published snapshot every 30 minutes. GitHub may delay
-    # scheduled runs, so the Android client rejects snapshots older than 2h.
+    # Fallback only. The primary trigger is the external heartbeat, which
+    # dispatches repository_dispatch when the published snapshot is stale.
+    # GitHub's schedule is delayed best-effort and must not be treated as an SLA.
     - cron: "*/30 * * * *"
+  repository_dispatch:
+    types: [glm-heartbeat]
   workflow_dispatch:
 
 permissions:
@@ -13,8 +16,10 @@ permissions:
   id-token: write
 
 concurrency:
+  # Keep an in-flight collection/deploy intact. The heartbeat also checks the
+  # latest run before dispatching, but this covers the race at start-up.
   group: glm-coding-plan-collector
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   collect-and-publish:
@@ -29,6 +34,11 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Record trigger
+        run: |
+          echo "Triggered by: \`${{ github.event_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

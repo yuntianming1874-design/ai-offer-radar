@@ -55,8 +55,9 @@ adb reverse tcp:8787 tcp:8787
 
 ## 远程模式：CI 定时采集 + 静态 JSON
 
-生产/验收不需要开发机一直开着。仓库内的
-`.github/workflows/glm-collector.yml` 会每 30 分钟：
+生产/验收不需要开发机一直开着。GitHub Actions 的 `schedule` 只作为兜底；
+主触发是外部 heartbeat（`heartbeat.mjs`，每 15 分钟检查快照，超过 75 分钟时
+通过 `repository_dispatch` 触发）。`.github/workflows/glm-collector.yml` 会：
 
 1. 在 Ubuntu runner 上安装 Node 24 和 Chrome；
 2. 先跑采集器测试；
@@ -67,6 +68,22 @@ adb reverse tcp:8787 tcp:8787
    artifact、HTTP 200、schema 合法且在 2 小时内；
 7. `build-android` 用同一个 endpoint 跑 JVM 测试和 Release 构建；
 8. 失败/2h 过期自动开 GitHub Issue；`glm-snapshot-health.yml` 每小时独立检查新鲜度。
+
+外部 heartbeat：
+
+```bash
+# 快照新鲜时不需要 token；过期时会查询最近 run，因此需要 token
+node tools/glm-collector/heartbeat.mjs --dry-run
+
+# macOS 安装 launchd（token 先存 Keychain）
+bash tools/glm-collector/install-heartbeat.macos.sh install
+
+# 任意外部 cron：把 GITHUB_TOKEN 注入环境，每 10–15 分钟运行
+GITHUB_TOKEN=... node tools/glm-collector/heartbeat.mjs
+```
+
+token 权限、Keychain、launchd 状态/卸载和托管 cron 说明见
+[docs/HEARTBEAT.md](../../docs/HEARTBEAT.md)。
 
 首次使用前：
 
@@ -95,8 +112,9 @@ Android 构建时注入：
   不会悄悄请求错误地址。
 - 远程 endpoint 必须是 HTTPS；`network_security_config` 只对 localhost/10.0.2.2
   放行明文。
-- App 会拒绝抓取时间超过 **2 小时**的 payload；CI 每 30 分钟刷新，失败时不会覆盖
-  上一次已发布的 JSON。超时后官方同步会失败并保留缓存，而不是把旧数据描述成实时。
+- App 会拒绝抓取时间超过 **2 小时**的 payload；外部 heartbeat 在 75 分钟时触发，
+  GitHub schedule 每 30 分钟只是兜底；失败时不会覆盖上一次已发布的 JSON。超时后
+  官方同步会失败并保留缓存，而不是把旧数据描述成实时。
 
 可在仓库 **Actions → GLM Coding Plan collector** 查看每次采集结果；Pages
 的 `index.html` 会显示本次抓取时间和来源链接。
@@ -189,7 +207,8 @@ node --test tools/glm-collector/test/*.test.mjs
 测试覆盖金额解析、3 档 × 3 周期 = 9 个 offer、季/年总价与月均、缺失 tab/档位、
 当前价高于原价、来源/来源 ID 不匹配、重复 ID、过期/未来抓取时间、
 `validate-payload.mjs` 的失败关闭行为，以及发布端点的 HTTP 重试、过期拒绝、
-线上字节 SHA-256 不一致拒绝。当前 **15 / 15** 通过（4 payload + 6 校验/CLI + 5 发布校验）。
+线上字节 SHA-256 不一致拒绝，以及 heartbeat 的新鲜/等待/dispatch/不可读/dry-run
+判定。当前 **23 / 23** 通过（4 payload + 6 校验/CLI + 5 发布校验 + 8 heartbeat）。
 
 ## 已知限制
 
@@ -202,3 +221,6 @@ node --test tools/glm-collector/test/*.test.mjs
 - 本地运行需要 Chrome；CI 使用 `browser-actions/setup-chrome`。Android 设备无法直接渲染该 SPA，Debug 通过本机采集器或 `adb reverse` 获取 JSON。
 - CI 的 Android job 用一次性 key 签 helper APK，只用于冒烟/下载，不是正式 release 签名。
 - 发布校验依赖 GitHub Pages 公网可达；它验证的是“刚部署的字节”，不是长期可用性 SLA。
+- 外部 heartbeat 的 macOS launchd 依赖本机开机、联网、用户登录；生产应把
+  `heartbeat.mjs` 放到常在线 VM/容器或托管 cron。GitHub `schedule` 仍可能延迟，
+  不能当 SLA。
